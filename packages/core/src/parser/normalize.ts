@@ -214,6 +214,7 @@ export function normalize(data: Raw, parsed: ParsedYaml): NormalizeResult {
             from: matcher(raw.from),
             to: matcher(raw.to),
             unless: raw.unless === 'same-group' ? 'same-group' : undefined,
+            ignore: raw.ignore === 'async' ? 'async' : undefined,
             implicit: false,
             source: ref(path),
           },

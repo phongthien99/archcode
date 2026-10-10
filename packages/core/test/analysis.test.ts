@@ -149,3 +149,42 @@ rules:
     });
   });
 });
+
+describe('no-circular với ignore: async (S5-TECH-01)', () => {
+  const body = (ignore: string) => `components:
+  - { id: order, type: service }
+  - { id: bus, type: queue }
+  - { id: billing, type: service }
+relationships:
+  - { from: order, to: bus, type: kafka }
+  - { from: bus, to: order, type: kafka }
+  - { from: order, to: billing, type: http }
+  - { from: billing, to: order, type: grpc }
+rules:
+  - { id: no-cycles, type: no-circular${ignore} }
+`;
+
+  it('mặc định: báo cả vòng qua event bus', () => {
+    const codes = validate(yaml(body(''))).diagnostics.filter(
+      (d) => d.code === 'circular-dependency',
+    );
+    expect(codes.map((d) => d.message)).toEqual([
+      'Vòng phụ thuộc: order → bus → order (nhóm 3 component phụ thuộc vòng lẫn nhau)',
+    ]);
+  });
+
+  it('ignore: async → chỉ còn vòng đồng bộ', () => {
+    const { diagnostics } = validate(yaml(body(', ignore: async')));
+    expect(
+      diagnostics.filter((d) => d.severity === 'error' && d.code !== 'circular-dependency'),
+    ).toEqual([]);
+    expect(
+      diagnostics.filter((d) => d.code === 'circular-dependency').map((d) => d.message),
+    ).toEqual(['Vòng phụ thuộc: order → billing → order']);
+  });
+
+  it('giá trị ignore khác → lỗi schema', () => {
+    const { diagnostics } = validate(yaml(body(', ignore: sync')));
+    expect(diagnostics.some((d) => d.code === 'schema-enum')).toBe(true);
+  });
+});

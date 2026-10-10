@@ -3,21 +3,37 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "ArchCode core: parse, validate, analyze. Thuần TypeScript, không phụ thuộc DOM/Node.",
+  "description": "ArchCode core library: parse, validate, analyze, layout, and render architecture-as-code YAML.",
+  "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
     "./constants": "./src/constants.ts",
     "./theme": "./src/render/theme.ts",
-    "./schema.json": "./src/schema/architecture.schema.json"
+    "./schema.json": "./src/schema/architecture.schema.json",
+    "./canvas": "./src/canvas.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && pnpm run build:js && pnpm run build:types && pnpm run build:schema && pnpm run build:license && pnpm run build:package",
+    "build:js": "esbuild src/index.ts src/constants.ts src/render/theme.ts src/canvas.ts --bundle --platform=neutral --format=esm --target=es2022 --packages=external --outdir=dist --outbase=src",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:schema": "mkdir -p dist/schema && cp src/schema/architecture.schema.json dist/schema/architecture.schema.json",
+    "build:license": "cp ../../LICENSE dist/LICENSE",
+    "build:package": "node scripts/write-publish-package.mjs",
+    "pack:dry": "pnpm run build && npm pack --dry-run ./dist",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
-    "test": "vitest run",
+    "test": "vitest run --exclude test/perf.test.ts && vitest run test/perf.test.ts",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "ajv": "^8.20.0",
     "elkjs": "^0.12.0",
     "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

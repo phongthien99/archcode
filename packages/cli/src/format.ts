@@ -12,7 +12,8 @@ export function colors(enabled: boolean): Colors {
  * và hầu hết CI nhận diện được để click tới vị trí lỗi.
  */
 export function formatDiagnostic(file: string, d: Diagnostic, c: Colors): string {
-  const location = d.line ? `${file}:${d.line}:${d.column ?? 1}` : file;
+  const target = d.file ?? file;
+  const location = d.line ? `${target}:${d.line}:${d.column ?? 1}` : target;
   const severity =
     d.severity === 'error'
       ? c.red('error  ')

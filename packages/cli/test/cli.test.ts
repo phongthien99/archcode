@@ -129,4 +129,63 @@ describe('archcode build', () => {
     expect(run('build', src).code).toBe(0);
     expect(existsSync(join(tmp, 'arch.html'))).toBe(true);
   });
+
+  describe('file layout (S5-LAYOUT-05)', () => {
+    const LAYOUT =
+      'version: 1\nviews:\n  overview:\n    nodes:\n      api-gateway: { x: -900, y: -700 }\n';
+    const setup = (layout?: string) => {
+      const dir = mkdtempSync(join(tmpdir(), 'archcode-layout-'));
+      writeFileSync(
+        join(dir, 'arch.yaml'),
+        readFileSync(join(ROOT, 'fixtures/document-platform.yaml')),
+      );
+      if (layout !== undefined) writeFileSync(join(dir, 'arch.layout.yaml'), layout);
+      return dir;
+    };
+    const viewBox = (html: string) => /viewBox="([^"]+)"/.exec(html)![1]!;
+
+    it('tự đọc <tên>.layout.yaml cạnh file YAML; --auto-layout bỏ qua', () => {
+      const dir = setup(LAYOUT);
+      expect(run('build', join(dir, 'arch.yaml'), '-o', join(dir, 'a.html')).code).toBe(0);
+      expect(
+        run('build', join(dir, 'arch.yaml'), '-o', join(dir, 'b.html'), '--auto-layout').code,
+      ).toBe(0);
+      const manual = readFileSync(join(dir, 'a.html'), 'utf8');
+      expect(viewBox(manual)).toMatch(/^-\d+ -\d+ /);
+      expect(viewBox(readFileSync(join(dir, 'b.html'), 'utf8'))).toMatch(/^-8 -8 /);
+      expect(manual).toContain('arch.layout.yaml');
+    });
+
+    it('--layout <path>; SVG cũng dùng layout', () => {
+      const dir = setup();
+      writeFileSync(join(dir, 'custom.yaml'), LAYOUT);
+      const r = run(
+        'build',
+        join(dir, 'arch.yaml'),
+        '-f',
+        'svg',
+        '--layout',
+        join(dir, 'custom.yaml'),
+        '-o',
+        join(dir, 'o.svg'),
+      );
+      expect(r.code).toBe(0);
+      expect(viewBox(readFileSync(join(dir, 'o.svg'), 'utf8'))).toMatch(/^-\d+ -\d+ /);
+      expect(run('build', join(dir, 'arch.yaml'), '--layout', join(dir, 'missing.yaml')).code).toBe(
+        2,
+      );
+    });
+
+    it('ID không tồn tại trong layout → cảnh báo (không fail), có tên file layout', () => {
+      const dir = setup(
+        'version: 1\nviews:\n  overview:\n    nodes:\n      ghost: { x: 0, y: 0 }\n',
+      );
+      const r = run('validate', join(dir, 'arch.yaml'));
+      expect(r.code).toBe(0);
+      expect(r.stdout).toContain(`${join(dir, 'arch.layout.yaml')}  warning  layout-unknown-id`);
+      expect(run('build', join(dir, 'arch.yaml'), '-o', join(dir, 'x.html')).stdout).toContain(
+        'layout-unknown-id',
+      );
+    });
+  });
 });

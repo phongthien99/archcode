@@ -359,3 +359,376 @@ select:focus-visible {
   color: var(--accent);
   pointer-events: none;
 }
+
+/* --- Sprint 4–5: workspace, canvas, property panel, tìm kiếm */
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.dirty {
+  color: var(--warn);
+}
+.toast.info {
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--line);
+}
+
+.workspace {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.workspace-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  min-height: 36px;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.segmented button {
+  border: 0;
+  border-radius: 0;
+  padding: 3px 12px;
+}
+.segmented button.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.hint-text {
+  color: var(--muted);
+  font-size: 12px;
+  margin-left: 6px;
+}
+.workspace-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+}
+.workspace .preview {
+  flex: 1;
+}
+
+.canvas-wrap {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: var(--canvas);
+}
+.canvas-wrap .react-flow {
+  --xy-background-color: var(--canvas);
+  --xy-background-pattern-color: var(--dot);
+  --xy-node-border-radius: 0;
+  --xy-minimap-background-color: var(--panel);
+  --xy-minimap-mask-background-color: color-mix(in srgb, var(--muted) 18%, transparent);
+  --xy-controls-button-background-color: var(--panel);
+  --xy-controls-button-background-color-hover: var(--hover);
+  --xy-controls-button-color: var(--fg);
+  --xy-controls-button-border-color: var(--line);
+  --xy-selection-background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+  --xy-selection-border-color: var(--accent);
+}
+.canvas-banner {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 132px;
+  right: 12px;
+}
+.canvas-wrap .placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.arch-node {
+  position: relative;
+}
+.arch-node svg {
+  display: block;
+  overflow: visible;
+}
+.react-flow__node.selected .ac-shape,
+.arch-node .ac-selected > .ac-shape {
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+}
+.react-flow__handle.h-anchor {
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  top: 50%;
+  left: 50%;
+}
+.react-flow__handle.h-connect {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.react-flow__node:hover .react-flow__handle.h-connect,
+.react-flow__node.selected .react-flow__handle.h-connect,
+.react-flow.connecting .react-flow__handle.h-connect {
+  opacity: 1;
+}
+.arch-group {
+  width: 100%;
+  height: 100%;
+  border: 1.2px dashed var(--ac-group-stroke, #94a3b8);
+  background: var(--ac-group-fill, rgba(100, 116, 139, 0.05));
+  border-radius: 10px;
+}
+.arch-group.selected {
+  border: 2px solid var(--accent);
+}
+.arch-group.warning {
+  border: 3px solid var(--ac-warning, #d97706);
+}
+.arch-group.error {
+  border: 3px solid var(--ac-error, #dc2626);
+}
+.arch-group-label {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ac-muted, #475569);
+  white-space: nowrap;
+}
+.ac-edge.ac-selected > path:first-child {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.ac-arrow-selected {
+  fill: var(--accent);
+}
+.react-flow__edge .ac-label {
+  pointer-events: none;
+}
+.minimap .mm-node {
+  fill: var(--muted);
+}
+.minimap .mm-group {
+  fill: transparent;
+  stroke: var(--line);
+}
+
+.palette {
+  position: absolute;
+  z-index: 5;
+  left: 8px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+}
+.palette-item:hover {
+  background: var(--hover);
+}
+.palette-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.props {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  overflow: auto;
+  padding: 10px 12px;
+  min-height: 0;
+}
+.props h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.props fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.props-empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.field input,
+.field textarea,
+.field select {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 5px 7px;
+  width: 100%;
+}
+.field textarea {
+  resize: vertical;
+}
+.field .mono {
+  font-family: var(--mono);
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+button.danger {
+  color: var(--err);
+}
+.props-issues {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.props-issues li {
+  padding: 6px 8px;
+  border-radius: 5px;
+  border-left: 3px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.props-issues li.error {
+  border-color: var(--err);
+  background: color-mix(in srgb, var(--err) 10%, transparent);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+.search,
+.folder-dialog {
+  width: min(560px, 90vw);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.search input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 15px;
+  background: transparent;
+  color: var(--fg);
+  outline: none;
+}
+.search ul,
+.folder-dialog ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 50vh;
+  overflow: auto;
+}
+.search li {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.search li span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.search li.active {
+  background: var(--selection);
+}
+.search li.empty {
+  color: var(--muted);
+  cursor: default;
+}
+.folder-dialog {
+  padding: 14px;
+}
+.folder-dialog h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.folder-dialog p {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+.folder-dialog li button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  font-family: var(--mono);
+}
+.toolbar select {
+  max-width: 170px;
+}
+.toolbar .view-select select {
+  max-width: 190px;
+}
+.canvas-wrap .react-flow__minimap {
+  width: 168px;
+  height: 112px;
+}
+.canvas-wrap .react-flow__minimap svg {
+  width: 168px;
+  height: 112px;
+}

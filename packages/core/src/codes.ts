@@ -34,6 +34,10 @@ export const DIAGNOSTIC_CODES = {
   'circular-dependency': 'Vòng phụ thuộc giữa các component',
   'orphan-component': 'Component không có quan hệ nào',
   'forbidden-dependency': 'Quan hệ bị cấm bởi rule',
+
+  // File layout
+  'layout-invalid': 'File layout sai định dạng',
+  'layout-unknown-id': 'File layout tham chiếu tới phần tử không tồn tại',
 } as const;
 
 export type DiagnosticCode = keyof typeof DIAGNOSTIC_CODES;

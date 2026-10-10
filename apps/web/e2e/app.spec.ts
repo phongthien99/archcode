@@ -2,41 +2,20 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { errorCount, expect, FIXTURE, previewNodes, ROOT, setYaml, test as base } from './helpers';
 
-const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const FIXTURE = readFileSync(join(ROOT, 'fixtures/document-platform.yaml'), 'utf8');
-
-const nodes = (page: Page) => page.locator('[data-testid=preview] svg .ac-node');
-const errorCount = (page: Page) => page.getByTestId('error-count');
-
-/** Thay toàn bộ nội dung editor (insertText không kích hoạt auto-indent của CodeMirror). */
-async function setYaml(page: Page, text: string) {
-  await page.locator('.cm-content').click();
-  await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.insertText(text);
-}
-
-const offOrigin: string[] = [];
-
-test.beforeEach(async ({ page, baseURL }) => {
-  // Ràng buộc C-03: ứng dụng không được gọi bất kỳ máy chủ nào ngoài nơi phục vụ file tĩnh.
-  page.on('request', (req) => {
-    const url = req.url();
-    if (!url.startsWith(baseURL!) && !/^(data|blob):/.test(url)) offOrigin.push(url);
-  });
-  await page.goto('/');
-  await page.evaluate(() => indexedDB.deleteDatabase('keyval-store'));
-  await page.reload();
-  await expect(nodes(page)).toHaveCount(9);
+/** Các luồng của Sprint 3 chạy ở chế độ Xem trước (SVG giống hệt bản xuất). */
+const test = base.extend<{ preview: Page }>({
+  preview: async ({ app }, use) => {
+    await app.getByTestId('mode-preview').click();
+    await expect(previewNodes(app)).toHaveCount(9);
+    await use(app);
+  },
 });
+const nodes = previewNodes;
 
-test.afterEach(() => {
-  expect(offOrigin, 'request ra ngoài origin').toEqual([]);
-});
-
-test('mở lần đầu: template mẫu, diagram 9 component, không lỗi', async ({ page }) => {
+test('mở lần đầu: template mẫu, diagram 9 component, không lỗi', async ({ preview: page }) => {
   await expect(errorCount(page)).toHaveText('0 lỗi');
   await expect(page.getByTestId('view-select').locator('option')).toHaveText([
     'Tổng quan hệ thống',
@@ -44,7 +23,7 @@ test('mở lần đầu: template mẫu, diagram 9 component, không lỗi', asy
   ]);
 });
 
-test('sửa YAML → diagram và lỗi cập nhật; sửa lại → hết lỗi', async ({ page }) => {
+test('sửa YAML → diagram và lỗi cập nhật; sửa lại → hết lỗi', async ({ preview: page }) => {
   await setYaml(page, FIXTURE.replace('to: document-db', 'to: documnet-db'));
   await expect(errorCount(page)).toHaveText('1 lỗi');
   // document-db mất quan hệ duy nhất nên còn có thêm cảnh báo orphan — chọn đúng mục lỗi.
@@ -59,14 +38,14 @@ test('sửa YAML → diagram và lỗi cập nhật; sửa lại → hết lỗi
   await expect(page.locator('[data-testid=preview] svg')).toContainText('Tìm kiếm');
 });
 
-test('click diagnostic → nhảy tới đúng dòng trong editor', async ({ page }) => {
+test('click diagnostic → nhảy tới đúng dòng trong editor', async ({ preview: page }) => {
   await setYaml(page, FIXTURE.replace('to: document-db', 'to: documnet-db'));
   await page.locator('.diagnostics li button', { hasText: 'documnet-db' }).click();
   await expect(page.locator('.cm-activeLine')).toContainText('to: documnet-db');
 });
 
 test('click node trên diagram → nhảy tới định nghĩa trong YAML và đánh dấu node', async ({
-  page,
+  preview: page,
 }) => {
   const node = page.locator('[data-testid=preview] svg .ac-node[data-id="search-service"]');
   await node.click();
@@ -74,26 +53,26 @@ test('click node trên diagram → nhảy tới định nghĩa trong YAML và đ
   await expect(node).toHaveClass(/ac-selected/);
 });
 
-test('YAML lỗi cú pháp → giữ diagram hợp lệ gần nhất', async ({ page }) => {
+test('YAML lỗi cú pháp → giữ diagram hợp lệ gần nhất', async ({ preview: page }) => {
   await setYaml(page, `${FIXTURE}\n  - id: [broken`);
   await expect(page.getByText('đang hiển thị bản hợp lệ gần nhất')).toBeVisible();
   await expect(nodes(page)).toHaveCount(9);
   await expect(errorCount(page)).not.toHaveText('0 lỗi');
 });
 
-test('đổi view → diagram chỉ còn component của view', async ({ page }) => {
+test('đổi view → diagram chỉ còn component của view', async ({ preview: page }) => {
   await page.getByTestId('view-select').selectOption('core-domain');
   await expect(nodes(page)).toHaveCount(4);
 });
 
-test('template e-commerce: 2 view, không lỗi', async ({ page }) => {
+test('template e-commerce: 2 view, không lỗi', async ({ preview: page }) => {
   page.once('dialog', (d) => d.accept());
   await page.getByTestId('template-select').selectOption('ecommerce');
   await expect(nodes(page)).toHaveCount(13);
   await expect(errorCount(page)).toHaveText('0 lỗi');
 });
 
-test('xuất HTML giống hệt output của CLI với cùng YAML', async ({ page }) => {
+test('xuất HTML giống hệt output của CLI với cùng YAML', async ({ preview: page }) => {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByTestId('export-html').click(),
@@ -113,7 +92,7 @@ test('xuất HTML giống hệt output của CLI với cùng YAML', async ({ pag
 });
 
 test('mở lại file HTML đã xuất → nạp YAML nhúng (nhận diện theo nội dung, kể cả khi mất đuôi .html)', async ({
-  page,
+  preview: page,
 }) => {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -128,7 +107,7 @@ test('mở lại file HTML đã xuất → nạp YAML nhúng (nhận diện theo
   await expect(page.locator('.file-name')).toHaveText('document-platform.yaml');
 });
 
-test('mở file YAML từ máy', async ({ page }) => {
+test('mở file YAML từ máy', async ({ preview: page }) => {
   const file = join(mkdtempSync(join(tmpdir(), 'archcode-e2e-')), 'mini.yaml');
   writeFileSync(
     file,
@@ -139,7 +118,7 @@ test('mở file YAML từ máy', async ({ page }) => {
   await expect(page.locator('.file-name')).toHaveText('mini.yaml');
 });
 
-test('xuất PNG và SVG', async ({ page }) => {
+test('xuất PNG và SVG', async ({ preview: page }) => {
   const [png] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'PNG' }).click(),
@@ -160,14 +139,14 @@ test('xuất PNG và SVG', async ({ page }) => {
   );
 });
 
-test('tự lưu: tải lại trang vẫn giữ nội dung đang sửa', async ({ page }) => {
+test('tự lưu: tải lại trang vẫn giữ nội dung đang sửa', async ({ preview: page }) => {
   await setYaml(page, FIXTURE.replace('name: Document Platform', 'name: Bản nháp của tôi'));
   await page.waitForTimeout(800); // autosave debounce 500ms
   await page.reload();
   await expect(page.locator('.cm-content')).toContainText('name: Bản nháp của tôi');
 });
 
-test('autocomplete: gợi ý component type', async ({ page }) => {
+test('autocomplete: gợi ý component type', async ({ preview: page }) => {
   await setYaml(
     page,
     'version: 1\nsystem: { id: s, name: S }\ncomponents:\n  - id: a\n    type: data',
@@ -177,7 +156,7 @@ test('autocomplete: gợi ý component type', async ({ page }) => {
   await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('database');
 });
 
-test('đổi theme', async ({ page }) => {
+test('đổi theme', async ({ preview: page }) => {
   await page.getByLabel('Giao diện').selectOption('dark');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { validate, type Diagnostic } from '@archcode/core';
+import { checkLayout, parseLayout, validate, type Diagnostic } from '@archcode/core';
+import { findLayout } from './build';
 import { colors, count, printDiagnostics } from '../format';
 
 export interface ValidateOptions {
@@ -34,7 +35,14 @@ export function validateCommand(files: string[], options: ValidateOptions): numb
       console.error(`Không đọc được file "${file}": ${(err as Error).message}`);
       continue;
     }
-    const { diagnostics } = validate(text);
+    const { model, diagnostics } = validate(text);
+    // File layout đi kèm (nếu có) chỉ sinh cảnh báo.
+    const layoutPath = findLayout(file);
+    if (layoutPath) {
+      const parsed = parseLayout(readFileSync(layoutPath, 'utf8'), layoutPath);
+      diagnostics.push(...parsed.diagnostics);
+      if (model) diagnostics.push(...checkLayout(parsed.layout, model, layoutPath));
+    }
     const { errors, warnings } = count(diagnostics);
     reports.push({
       file,

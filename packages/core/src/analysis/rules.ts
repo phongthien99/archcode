@@ -7,6 +7,7 @@ import type {
   SourceRef,
   YamlPath,
 } from '../types';
+import { isAsyncRelationship } from '../constants';
 import { groupChain } from '../views/resolve';
 import { findCycles } from './cycles';
 import { buildGraph } from './graph';
@@ -23,7 +24,9 @@ export function runRules(model: ArchitectureModel, locate: Locate = defaultLocat
   for (const rule of model.rules) {
     switch (rule.type) {
       case 'no-circular':
-        for (const { cycle, size } of findCycles(graph)) {
+        for (const { cycle, size } of findCycles(
+          rule.ignore === 'async' ? syncGraph(model) : graph,
+        )) {
           const ids = [...cycle.map((r) => r.from), cycle[0]!.from];
           const extra =
             size > cycle.length ? ` (nhóm ${size} component phụ thuộc vòng lẫn nhau)` : '';
@@ -75,6 +78,14 @@ export function runRules(model: ArchitectureModel, locate: Locate = defaultLocat
     }
   }
   return diagnostics;
+}
+
+/** Đồ thị chỉ gồm quan hệ đồng bộ. */
+function syncGraph(model: ArchitectureModel) {
+  return buildGraph({
+    ...model,
+    relationships: model.relationships.filter((r) => !isAsyncRelationship(r)),
+  });
 }
 
 function base(rule: Rule) {

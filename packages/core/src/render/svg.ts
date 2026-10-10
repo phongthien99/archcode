@@ -1,5 +1,7 @@
 import type { EdgeRoute, GroupBox, Layout, NodeBox } from '../layout/elk';
-import type { Diagnostic, Severity } from '../types';
+import { isAsyncRelationship } from '../constants';
+import type { Component, Diagnostic, Severity } from '../types';
+import type { NodeContent } from './nodeContent';
 import { escapeXml as x } from './text';
 import { colorKey, diagramCss } from './theme';
 
@@ -14,7 +16,6 @@ export interface RenderOptions {
   title?: string;
 }
 
-const ASYNC_TYPES = new Set(['amqp', 'kafka', 'event', 'async', 'mqtt', 'sns', 'sqs', 'pubsub']);
 const MARGIN = 8;
 
 /** Layout → chuỗi SVG. Không dùng DOM, chạy được ở mọi môi trường. */
@@ -28,7 +29,7 @@ export function renderSvg(layout: Layout, options: RenderOptions = {}): string {
   const out: string[] = [];
   out.push(
     `<svg${options.standalone === false ? '' : ' xmlns="http://www.w3.org/2000/svg"'} class="ac-diagram" ` +
-      `viewBox="${-MARGIN} ${-MARGIN} ${width} ${height}" width="${width}" height="${height}" ` +
+      `viewBox="${(layout.x ?? 0) - MARGIN} ${(layout.y ?? 0) - MARGIN} ${width} ${height}" width="${width}" height="${height}" ` +
       `role="img"${options.title ? ` aria-label="${x(options.title)}"` : ''}>`,
   );
   if (options.title) out.push(`<title>${x(options.title)}</title>`);
@@ -70,8 +71,18 @@ function renderGroup(box: GroupBox, sev: Severity | undefined): string {
 
 function renderNode(box: NodeBox, sev: Severity | undefined): string {
   const c = box.component;
-  const cx = box.x + box.width / 2;
-  const tooltip = [
+  return (
+    `<g class="${nodeClass(c.type, sev)}" data-kind="component" data-id="${x(c.id)}">` +
+    `<title>${x(nodeTooltip(c))}</title>${nodeBodySvg(c.type, box.content, box)}</g>`
+  );
+}
+
+export function nodeClass(type: string, sev: Severity | undefined): string {
+  return `ac-node ac-t-${colorKey(type)}${stateClass(sev)}`;
+}
+
+export function nodeTooltip(c: Component): string {
+  return [
     c.name,
     c.description,
     c.technology && `Công nghệ: ${c.technology}`,
@@ -79,20 +90,32 @@ function renderNode(box: NodeBox, sev: Severity | undefined): string {
   ]
     .filter(Boolean)
     .join('\n');
-  const text = box.content.lines
+}
+
+/** Shape + chữ của một node tại `box` — dùng chung cho SVG xuất ra và node trên canvas. */
+export function nodeBodySvg(
+  type: string,
+  content: NodeContent,
+  box: { x: number; y: number; width: number; height: number },
+): string {
+  const cx = box.x + box.width / 2;
+  const text = content.lines
     .map(
       (l) =>
         `<text class="${l.className}" x="${cx}" y="${box.y + l.y}" text-anchor="middle">${x(l.text)}</text>`,
     )
     .join('');
-  return (
-    `<g class="ac-node ac-t-${colorKey(c.type)}${stateClass(sev)}" data-kind="component" data-id="${x(c.id)}">` +
-    `<title>${x(tooltip)}</title>${shape(c.type, box)}${text}</g>`
-  );
+  return shapeSvg(type, box) + text;
 }
 
-/** Shape theo component type. Phần tử chính có class `ac-shape` để nhận màu và trạng thái lỗi. */
-function shape(type: string, b: NodeBox): string {
+/**
+ * Shape theo component type. Phần tử chính có class `ac-shape` để nhận màu và trạng thái lỗi.
+ * Dùng chung cho SVG xuất ra và node trên canvas.
+ */
+export function shapeSvg(
+  type: string,
+  b: { x: number; y: number; width: number; height: number },
+): string {
   const { x: px, y: py, width: w, height: h } = b;
   switch (type) {
     case 'person': {
@@ -134,7 +157,7 @@ function shape(type: string, b: NodeBox): string {
 function renderEdge(edge: EdgeRoute, markerId: string, sev: Severity | undefined): string {
   const rel = edge.relationship;
   const d = edge.points.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ');
-  const async = rel.type && ASYNC_TYPES.has(rel.type) ? ' ac-async' : '';
+  const async = isAsyncRelationship(rel) ? ' ac-async' : '';
   const title = [`${rel.from} → ${rel.to}`, rel.label, rel.type && `[${rel.type}]`]
     .filter(Boolean)
     .join('\n');

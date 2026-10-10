@@ -289,6 +289,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "description": undefined,
       "from": undefined,
       "id": "no-cycles",
+      "ignore": undefined,
       "implicit": false,
       "severity": "error",
       "source": {
@@ -303,6 +304,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "description": undefined,
       "from": undefined,
       "id": "no-orphans",
+      "ignore": undefined,
       "implicit": false,
       "severity": "warning",
       "source": {
@@ -321,6 +323,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
         ],
       },
       "id": "no-cross-domain-db",
+      "ignore": undefined,
       "implicit": false,
       "severity": "error",
       "source": {

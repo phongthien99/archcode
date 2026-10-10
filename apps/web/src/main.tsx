@@ -11,7 +11,7 @@ async function boot() {
   const saved = await restore();
   const state = useApp.getState();
   state.setTheme(restoreTheme());
-  if (saved?.text) state.loadDocument(saved.text, saved.fileName);
+  if (saved?.text) state.loadDocument(saved.text, saved.fileName, { layout: saved.layout });
   else state.loadDocument(TEMPLATES[0]!.text, TEMPLATES[0]!.fileName);
   startAutosave();
 

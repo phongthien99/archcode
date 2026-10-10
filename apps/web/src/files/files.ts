@@ -16,7 +16,7 @@ export function baseName(fileName: string): string {
 /** Đọc file người dùng chọn: YAML trả nguyên văn; HTML export của ArchCode trả YAML đã nhúng. */
 export async function readArchitectureFile(
   file: File,
-): Promise<{ text: string; fileName: string }> {
+): Promise<{ text: string; fileName: string; layout?: string }> {
   const content = await file.text();
   // Nhận diện theo cả nội dung: file tải về/đổi tên có thể mất đuôi .html.
   if (/\.html?$/i.test(file.name) || /^\s*<(!doctype html|html)[\s>]/i.test(content)) {
@@ -28,7 +28,11 @@ export async function readArchitectureFile(
     }
     // Ưu tiên tên file YAML gốc lưu lúc xuất (bỏ phần thư mục nếu xuất từ CLI).
     const original = embedded.name?.split(/[\\/]/).pop();
-    return { text: embedded.text, fileName: original || `${baseName(file.name)}.yaml` };
+    return {
+      text: embedded.text,
+      fileName: original || `${baseName(file.name)}.yaml`,
+      layout: embedded.layout?.text,
+    };
   }
   return { text: content, fileName: file.name };
 }

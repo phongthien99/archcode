@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
+    "build:hugo-viewer": "vite build -c vite.hugo-viewer.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
@@ -19,8 +20,10 @@
     "@codemirror/lang-yaml": "^6.1.3",
     "@codemirror/language": "^6.13.1",
     "@codemirror/lint": "^6.9.7",
+    "@codemirror/search": "^6.7.2",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.14",
+    "@xyflow/react": "^12.12.0",
     "codemirror": "^6.0.2",
     "comlink": "^4.4.2",
     "elkjs": "0.12.0",

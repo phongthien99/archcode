@@ -8,11 +8,10 @@ import {
 } from '../render/nodeContent';
 import type { Component, Group, LayoutDirection, Relationship } from '../types';
 import type { ResolvedView } from '../views/resolve';
+import { manualLayout } from './manual';
+import type { Point } from './route';
 
-export interface Point {
-  x: number;
-  y: number;
-}
+export type { Point };
 
 export interface NodeBox {
   component: Component;
@@ -41,6 +40,9 @@ export interface EdgeRoute {
 }
 
 export interface Layout {
+  /** Góc trên trái của vùng vẽ (0 với auto-layout; layout thủ công có thể âm). */
+  x: number;
+  y: number;
   width: number;
   height: number;
   direction: LayoutDirection;
@@ -51,6 +53,14 @@ export interface Layout {
 
 export interface LayoutOptions {
   direction?: LayoutDirection;
+  /**
+   * Vị trí đã ghim (góc trên trái) theo ID component, lấy từ file layout.
+   * Có ít nhất một node của view được ghim → layout thủ công: node ghim giữ nguyên chỗ,
+   * node mới được đặt quanh, connector định tuyến orthogonal. Không có → auto-layout ELK.
+   */
+  positions?: Record<string, Point>;
+  /** Điểm gấp của connector theo ID quan hệ (chỉ dùng với layout thủ công). */
+  waypoints?: Record<string, Point[]>;
 }
 
 /** View từ ngưỡng này trở lên dùng thoroughness thấp để giữ thời gian layout ~1s (xem docs/spikes/elk.md). */
@@ -60,8 +70,12 @@ let elk: InstanceType<typeof ELK> | undefined;
 
 /** Auto-layout một view bằng ELK layered. Deterministic: cùng input → cùng tọa độ. */
 export async function layoutView(view: ResolvedView, options: LayoutOptions = {}): Promise<Layout> {
-  elk ??= new ELK();
   const direction = options.direction ?? view.view.direction;
+  const positions = options.positions;
+  if (positions && view.components.some((c) => Object.hasOwn(positions, c.id))) {
+    return manualLayout({ view, direction, positions, waypoints: options.waypoints });
+  }
+  elk ??= new ELK();
 
   // Tiền tố tránh trùng ID giữa group và component (trùng ID là lỗi, nhưng layout không được crash).
   const gid = (id: string) => `g:${id}`;
@@ -191,6 +205,8 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
   }
 
   return {
+    x: 0,
+    y: 0,
     width: round(result.width ?? 0),
     height: round(result.height ?? 0),
     direction,

@@ -38,3 +38,30 @@ export {
   type HtmlOptions,
   type HtmlResult,
 } from './export/html';
+export * from './mutate';
+export {
+  emptyLayout,
+  parseLayout,
+  checkLayout,
+  serializeLayout,
+  pruneLayout,
+  renameInLayout,
+  viewLayout,
+  isLayoutEmpty,
+  layoutFileName,
+  LAYOUT_VERSION,
+  type LayoutFile,
+  type ViewLayout,
+  type ParsedLayout,
+} from './layout/file';
+export { routeEdges, type Box, type RouteRequest, type RouteResult } from './layout/route';
+export { computeGroupBoxes, placeNodes, GROUP_PADDING } from './layout/manual';
+export { shapeSvg, nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
+export {
+  nodeContent,
+  edgeLabelContent,
+  type NodeContent,
+  type EdgeLabelContent,
+} from './render/nodeContent';
+export { ASYNC_RELATIONSHIP_TYPES, isAsyncRelationship } from './constants';
+export { elementRanges, elementAt, type ElementRange } from './parser/ranges';

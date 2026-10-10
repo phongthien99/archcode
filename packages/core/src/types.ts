@@ -83,6 +83,8 @@ export interface Rule {
   from?: RuleMatcher;
   to?: RuleMatcher;
   unless?: 'same-group';
+  /** Chỉ cho `no-circular`: `async` = bỏ qua quan hệ bất đồng bộ (event bus hai chiều là bình thường). */
+  ignore?: 'async';
   /** true nếu rule là mặc định (YAML không khai báo `rules`). */
   implicit: boolean;
   source?: SourceRef;
@@ -124,6 +126,8 @@ export interface Diagnostic {
   /** Gợi ý sửa lỗi, ví dụ "Có phải ý bạn là `document-db`?" */
   hint?: string;
   path?: YamlPath;
+  /** File chứa lỗi khi không phải file kiến trúc chính (ví dụ file layout). Dòng/cột tính trong file đó. */
+  file?: string;
   line?: number;
   column?: number;
   related?: RelatedLocation[];

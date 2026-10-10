@@ -1,12 +1,16 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import {
+  checkLayout,
   generateHtml,
   hasErrors,
+  layoutFileName,
   layoutView,
+  parseLayout,
   renderSvg,
   resolveView,
   validate,
+  viewLayout,
   type Diagnostic,
 } from '@archcode/core';
 import { colors, formatSize, printDiagnostics, type Colors } from '../format';
@@ -18,6 +22,17 @@ export interface BuildOptions {
   force: boolean;
   embedSource: boolean;
   color: boolean;
+  /** Đường dẫn file layout; mặc định tự tìm `<tên>.layout.yaml` cạnh file YAML. */
+  layout?: string;
+  /** Bỏ qua file layout, luôn auto-layout. */
+  autoLayout?: boolean;
+}
+
+/** File layout đi kèm `file` (nếu có): `--layout` > `<tên>.layout.yaml` cạnh file. */
+export function findLayout(file: string, explicit?: string): string | undefined {
+  if (explicit) return explicit;
+  const sibling = join(dirname(file), layoutFileName(basename(file)));
+  return existsSync(sibling) ? sibling : undefined;
 }
 
 /**
@@ -39,14 +54,30 @@ export async function buildCommand(file: string, options: BuildOptions): Promise
     return 2;
   }
 
+  const layoutPath = options.autoLayout ? undefined : findLayout(file, options.layout);
+  let layoutText: string | undefined;
+  if (layoutPath) {
+    try {
+      layoutText = readFileSync(layoutPath, 'utf8');
+    } catch (err) {
+      console.error(`Không đọc được file layout "${layoutPath}": ${(err as Error).message}`);
+      return 2;
+    }
+  }
+
   let content: string;
   let diagnostics: Diagnostic[];
   let output: string;
 
   if (options.format === 'html') {
-    const result = await generateHtml(text, { sourceName: file, embedSource: options.embedSource });
+    const result = await generateHtml(text, {
+      sourceName: file,
+      embedSource: options.embedSource,
+      layout: layoutText,
+      layoutName: layoutPath,
+    });
     content = result.html;
-    diagnostics = result.validation.diagnostics;
+    diagnostics = [...result.validation.diagnostics, ...result.layoutDiagnostics];
     output = options.output ?? replaceExt(file, '.html');
   } else {
     const { model, diagnostics: diags } = validate(text);
@@ -62,7 +93,20 @@ export async function buildCommand(file: string, options: BuildOptions): Promise
       );
       return 2;
     }
-    const layout = await layoutView(resolveView(model, view));
+    let pinned = viewLayout(undefined, view.id);
+    if (layoutText !== undefined) {
+      const parsed = parseLayout(layoutText, layoutPath);
+      diagnostics = [
+        ...diagnostics,
+        ...parsed.diagnostics,
+        ...checkLayout(parsed.layout, model, layoutPath),
+      ];
+      pinned = viewLayout(parsed.layout, view.id);
+    }
+    const layout = await layoutView(resolveView(model, view), {
+      positions: pinned.nodes,
+      waypoints: pinned.edges,
+    });
     content = renderSvg(layout, { diagnostics, title: view.name });
     output = options.output ?? replaceExt(file, `.${view.id}.svg`);
   }

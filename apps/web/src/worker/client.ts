@@ -1,5 +1,5 @@
 import { wrap, type Remote } from 'comlink';
-import type { AnalyzeResult, CoreWorkerApi } from './api';
+import type { AnalyzeRequest, AnalyzeResult, CoreWorkerApi } from './api';
 
 /** Toàn bộ core (Ajv, ELK...) chạy trong Worker để UI không bao giờ bị đơ. */
 export const core: Remote<CoreWorkerApi> = wrap<CoreWorkerApi>(
@@ -15,7 +15,7 @@ export function createAnalyzer(
   onBusy: (busy: boolean) => void,
 ) {
   let running = false;
-  let pending: { text: string; viewId: string | null } | null = null;
+  let pending: AnalyzeRequest | null = null;
 
   async function pump() {
     if (running || !pending) return;
@@ -25,7 +25,7 @@ export function createAnalyzer(
       const job = pending;
       pending = null;
       try {
-        const result = await core.analyze(job.text, job.viewId);
+        const result = await core.analyze(job);
         // Có yêu cầu mới hơn trong lúc chạy → bỏ kết quả này, chạy tiếp bản mới.
         if (!pending) onResult(result);
       } catch (err) {
@@ -37,8 +37,8 @@ export function createAnalyzer(
   }
 
   return {
-    request(text: string, viewId: string | null) {
-      pending = { text, viewId };
+    request(job: AnalyzeRequest) {
+      pending = job;
       void pump();
     },
   };

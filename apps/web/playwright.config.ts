@@ -13,6 +13,11 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     acceptDownloads: true,
   },
+  projects: [
+    { name: 'e2e', testIgnore: /perf\.spec\.ts$/ },
+    // Đo fps khi kéo 200 node: chạy một mình, sau khi các test khác xong.
+    { name: 'perf', testMatch: /perf\.spec\.ts$/, dependencies: ['e2e'] },
+  ],
   webServer: {
     command: 'pnpm build && pnpm preview --port 4173 --strictPort',
     url: 'http://localhost:4173/',

@@ -59,12 +59,15 @@ export function DiagnosticsPanel() {
               <button
                 type="button"
                 onClick={() => {
-                  if (d.line) revealLine(d.line, d.column);
+                  // Lỗi của file layout: dòng/cột thuộc file đó, không nhảy trong editor YAML.
+                  if (d.line && !d.file) revealLine(d.line, d.column);
                   if (d.target) select(d.target);
                 }}
               >
                 <span className={`sev ${d.severity}`}>{LABEL[d.severity]}</span>
-                <span className="loc">{d.line ? `${d.line}:${d.column ?? 1}` : '—'}</span>
+                <span className="loc" title={d.file}>
+                  {d.file ? 'layout' : d.line ? `${d.line}:${d.column ?? 1}` : '—'}
+                </span>
                 <span className="msg">
                   {d.message}
                   {d.hint && <span className="hint"> ↳ {d.hint}</span>}

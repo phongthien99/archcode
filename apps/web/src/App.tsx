@@ -1,10 +1,11 @@
 import { darkThemeVariables, diagramCss } from '@archcode/core/theme';
 import { useEffect, useRef, useState } from 'react';
 import { YamlEditor } from './editor/YamlEditor';
-import { readArchitectureFile } from './files/files';
+import { checkExternalChanges, readPickedFiles, save } from './files/fs';
 import { DiagnosticsPanel } from './panels/Diagnostics';
+import { SearchDialog } from './panels/SearchDialog';
 import { Toolbar } from './panels/Toolbar';
-import { Preview } from './preview/Preview';
+import { Workspace } from './panels/Workspace';
 import { useApp } from './store';
 
 // Diagram dùng CSS variables: khai báo một lần, đổi theme không cần render lại SVG.
@@ -14,20 +15,80 @@ const DIAGRAM_STYLE = `${diagramCss()}
 
 export function App() {
   const theme = useApp((s) => s.theme);
-  const [split, setSplit] = useState(42);
+  const notice = useApp((s) => s.notice);
+  const [split, setSplit] = useState(34);
   const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: 'error' | 'info'; message: string } | null>(null);
   const main = useRef<HTMLDivElement>(null);
+  const setError = (message: string | null) =>
+    setToast(message ? { kind: 'error', message } : null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   useEffect(() => {
-    if (!error) return;
-    const timer = setTimeout(() => setError(null), 6000);
+    if (notice) setToast({ kind: notice.kind, message: notice.message });
+  }, [notice]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), toast.kind === 'error' ? 6000 : 4000);
     return () => clearTimeout(timer);
-  }, [error]);
+  }, [toast]);
+
+  // Phím tắt toàn cục: undo/redo chung cho editor và canvas (S5-HIST-02), lưu, tìm kiếm.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const key = e.key.toLowerCase();
+      const target = e.target as HTMLElement | null;
+      // Ô nhập của property panel/tìm kiếm giữ undo riêng của trình duyệt.
+      const nativeField =
+        !!target?.closest('input, textarea, select') && !target.closest('.cm-editor');
+      const state = useApp.getState();
+      if (key === 's') {
+        e.preventDefault();
+        save().catch((err: Error) => setError(err.message));
+      } else if (key === 'k') {
+        e.preventDefault();
+        state.setSearchOpen(true);
+      } else if (nativeField) {
+        return;
+      } else if (key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        state.undo();
+      } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+        e.preventDefault();
+        state.redo();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+
+  // Quay lại tab: phát hiện file bị đổi bên ngoài (S5-FS-03).
+  useEffect(() => {
+    let busy = false;
+    const check = () => {
+      if (busy || document.visibilityState !== 'visible' || !useApp.getState().fs) return;
+      busy = true;
+      checkExternalChanges(async (path) =>
+        confirm(
+          `"${path}" đã thay đổi bên ngoài (git pull, editor khác).\n\n` +
+            'OK: nạp lại từ đĩa (bỏ thay đổi chưa lưu)\nHủy: giữ bản đang sửa',
+        ),
+      )
+        .catch((err: Error) => setError(err.message))
+        .finally(() => (busy = false));
+    };
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('focus', check);
+    };
+  }, []);
 
   const onSplitterDown = (e: React.PointerEvent) => {
     const el = e.currentTarget as HTMLElement;
@@ -47,11 +108,11 @@ export function App() {
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
+    const files = [...e.dataTransfer.files];
+    if (!files.length) return;
     try {
-      const doc = await readArchitectureFile(file);
-      useApp.getState().loadDocument(doc.text, doc.fileName);
+      const doc = await readPickedFiles(files);
+      if (doc) useApp.getState().loadDocument(doc.text, doc.fileName, { layout: doc.layout });
     } catch (err) {
       setError((err as Error).message);
     }
@@ -82,16 +143,23 @@ export function App() {
           aria-valuenow={Math.round(split)}
           onPointerDown={onSplitterDown}
         />
-        <Preview />
+        <Workspace />
       </div>
       <DiagnosticsPanel />
-      {error && (
-        <div className="toast" role="alert" onClick={() => setError(null)}>
-          {error}
+      <SearchDialog />
+      {toast && (
+        <div
+          className={`toast ${toast.kind}`}
+          role={toast.kind === 'error' ? 'alert' : 'status'}
+          onClick={() => setToast(null)}
+        >
+          {toast.message}
         </div>
       )}
       {dragging && (
-        <div className="drop-overlay">Thả file .yaml hoặc .html của ArchCode vào đây</div>
+        <div className="drop-overlay">
+          Thả file .yaml (kèm .layout.yaml) hoặc .html của ArchCode vào đây
+        </div>
       )}
     </div>
   );

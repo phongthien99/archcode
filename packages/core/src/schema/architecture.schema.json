@@ -158,7 +158,11 @@
         "description": { "type": "string" },
         "from": { "$ref": "#/definitions/matcher" },
         "to": { "$ref": "#/definitions/matcher" },
-        "unless": { "enum": ["same-group"] }
+        "unless": { "enum": ["same-group"] },
+        "ignore": {
+          "enum": ["async"],
+          "description": "Chỉ cho no-circular: bỏ qua quan hệ bất đồng bộ (amqp, kafka, event...) khi tìm vòng."
+        }
       }
     }
   }

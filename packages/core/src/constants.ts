@@ -40,3 +40,19 @@ export const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 export const VIEW_SELECTOR_PREFIXES = ['type', 'group', 'tag'] as const;
 
 export const DEFAULT_VIEW_ID = 'all';
+
+/** Giao thức bất đồng bộ: connector vẽ nét đứt; rule `no-circular` có thể bỏ qua (`ignore: async`). */
+export const ASYNC_RELATIONSHIP_TYPES: readonly string[] = [
+  'amqp',
+  'kafka',
+  'event',
+  'async',
+  'mqtt',
+  'sns',
+  'sqs',
+  'pubsub',
+];
+
+export function isAsyncRelationship(rel: { type?: string }): boolean {
+  return rel.type !== undefined && ASYNC_RELATIONSHIP_TYPES.includes(rel.type);
+}

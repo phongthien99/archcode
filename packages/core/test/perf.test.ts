@@ -1,51 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import { layoutView, resolveView, validate } from '../src';
+import { realisticModel } from './perf-model';
 
 /**
  * S3-QA-02: model 200 component / 400 quan hệ "thực tế" (cục bộ theo domain, chủ yếu một chiều).
  * Ngân sách sau spike ELK (docs/spikes/elk.md): validate < 50ms, layout ≤ 1s.
- * Ngưỡng trong test nới gấp 3 để không chập chờn trên máy CI chậm; thời gian thật được in ra.
+ * Chạy riêng sau các test khác (xem script `test`) để số đo không bị nhiễu.
+ * Trên CI ngưỡng nới gấp 3 để không chập chờn trên máy chậm; thời gian thật được in ra.
  */
-function realisticModel(components: number, relationships: number): string {
-  let seed = 42;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const lines = ['version: 1', 'system: { id: perf, name: Perf }', 'groups:'];
-  for (let g = 0; g < 10; g++) lines.push(`  - { id: domain-${g}, name: Domain ${g} }`);
-  lines.push('components:');
-  const types = ['service', 'service', 'service', 'database', 'queue', 'cache'];
-  for (let i = 0; i < components; i++) {
-    lines.push(
-      `  - { id: c${i}, name: Component ${i}, type: ${types[i % types.length]}, group: domain-${Math.floor(i / 20)}, technology: Go }`,
-    );
-  }
-  lines.push('relationships:');
-  const seen = new Set<string>();
-  while (seen.size < relationships) {
-    const from = Math.floor(rnd() * (components - 1));
-    const to = Math.min(components - 1, from + 1 + Math.floor(rnd() * 25));
-    const key = `${from}-${to}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    lines.push(`  - { from: c${from}, to: c${to}, type: http }`);
-  }
-  lines.push(
-    'rules: [{ id: no-cycles, type: no-circular }, { id: no-orphans, type: no-orphan, severity: warning }]',
-  );
-  return lines.join('\n');
-}
-
 describe('hiệu năng', () => {
   const text = realisticModel(200, 400);
 
-  it('validate 200 component / 400 quan hệ', () => {
-    validate(text); // warm-up (biên dịch schema Ajv)
-    const start = performance.now();
-    const { model, diagnostics } = validate(text);
-    const ms = performance.now() - start;
-    console.log(`validate: ${ms.toFixed(0)} ms`);
-    expect(model!.components).toHaveLength(200);
-    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(ms).toBeLessThan(150);
+  it('validate 200 component / 400 quan hệ < 50ms (S5-TECH-02)', () => {
+    validate(text); // warm-up (biên dịch schema Ajv, JIT)
+    validate(text);
+    const runs: number[] = [];
+    let result = validate(text);
+    for (let i = 0; i < 5; i++) {
+      const start = performance.now();
+      result = validate(text);
+      runs.push(performance.now() - start);
+    }
+    // Lấy lần nhanh nhất: các file test khác chạy song song làm nhiễu số đo.
+    const best = Math.min(...runs);
+    console.log(`validate: ${best.toFixed(0)} ms (nhanh nhất / 5 lần)`);
+    expect(result.model!.components).toHaveLength(200);
+    expect(result.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    expect(best).toBeLessThan(process.env.CI ? 150 : 50);
   });
 
   it('layout 200 component / 400 quan hệ', { timeout: 30_000 }, async () => {

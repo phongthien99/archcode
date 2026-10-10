@@ -1,5 +1,6 @@
 import { buildGraph, dependsOn, usedBy, type DependencyGraph } from '../analysis/graph';
 import { layoutView } from '../layout/elk';
+import { checkLayout, parseLayout, viewLayout, type LayoutFile } from '../layout/file';
 import { renderSvg } from '../render/svg';
 import { escapeXml as h } from '../render/text';
 import type { ArchitectureModel, Component, Diagnostic, ValidationResult } from '../types';
@@ -18,11 +19,20 @@ export interface HtmlOptions {
    * cùng YAML → cùng HTML, diff được trong Git.
    */
   generatedAt?: string;
+  /**
+   * Nội dung file layout (`<tên>.layout.yaml`). View có node đã ghim dùng vị trí trong file;
+   * không có thì auto-layout. Được nhúng cùng YAML để mở lại HTML vẫn giữ bố cục.
+   */
+  layout?: string;
+  /** Tên file layout, dùng trong thông báo lỗi. */
+  layoutName?: string;
 }
 
 export interface HtmlResult {
   html: string;
   validation: ValidationResult;
+  /** Cảnh báo về file layout (sai định dạng, ID không tồn tại). */
+  layoutDiagnostics: Diagnostic[];
 }
 
 const SOURCE_SCRIPT_ID = 'archcode-source';
@@ -30,11 +40,20 @@ const SOURCE_SCRIPT_ID = 'archcode-source';
 /** Toàn bộ pipeline: YAML → validate → layout → SVG → một file HTML tự chứa. */
 export async function generateHtml(text: string, options: HtmlOptions = {}): Promise<HtmlResult> {
   const validation = validate(text);
-  const { model, diagnostics } = validation;
+  const { model } = validation;
+  let layout: LayoutFile | undefined;
+  const layoutDiagnostics: Diagnostic[] = [];
+  if (options.layout !== undefined) {
+    const parsed = parseLayout(options.layout, options.layoutName);
+    layout = parsed.layout;
+    layoutDiagnostics.push(...parsed.diagnostics);
+    if (model) layoutDiagnostics.push(...checkLayout(layout, model, options.layoutName));
+  }
+  const diagnostics = [...validation.diagnostics, ...layoutDiagnostics];
 
   const title = model ? model.system.name : 'Kiến trúc hệ thống';
   const body = model
-    ? await renderModel(model, diagnostics, options)
+    ? await renderModel(model, diagnostics, options, layout)
     : `<main class="wrap">${renderValidation(diagnostics, options)}</main>`;
 
   const footer = [
@@ -58,18 +77,20 @@ export async function generateHtml(text: string, options: HtmlOptions = {}): Pro
 ${renderHeader(model, diagnostics)}
 ${body}
 <footer class="wrap">${footer}</footer>
-${options.embedSource === false ? '' : embedSource(text, options.sourceName)}
+${options.embedSource === false ? '' : embedSource(text, options)}
 <script>${VIEWER_JS}</script>
 </body>
 </html>
 `;
-  return { html, validation };
+  return { html, validation, layoutDiagnostics };
 }
 
 export interface EmbeddedSource {
   text: string;
   /** Tên file YAML gốc lúc xuất (nếu có). */
   name?: string;
+  /** File layout đi kèm (nếu lúc xuất có). */
+  layout?: { text: string; name?: string };
 }
 
 /** Đọc lại YAML (kèm tên file gốc) đã nhúng trong file HTML export. */
@@ -79,9 +100,24 @@ export function extractEmbeddedSource(html: string): EmbeddedSource | null {
   ).exec(html);
   if (!match) return null;
   try {
-    const data = JSON.parse(match[1]!) as { format?: string; text?: unknown; name?: unknown };
+    const data = JSON.parse(match[1]!) as {
+      format?: string;
+      text?: unknown;
+      name?: unknown;
+      layout?: { text?: unknown; name?: unknown };
+    };
     if (data.format !== 'archcode/yaml' || typeof data.text !== 'string') return null;
-    return { text: data.text, name: typeof data.name === 'string' ? data.name : undefined };
+    const result: EmbeddedSource = {
+      text: data.text,
+      name: typeof data.name === 'string' ? data.name : undefined,
+    };
+    if (data.layout && typeof data.layout.text === 'string') {
+      result.layout = {
+        text: data.layout.text,
+        name: typeof data.layout.name === 'string' ? data.layout.name : undefined,
+      };
+    }
+    return result;
   } catch {
     return null;
   }
@@ -96,8 +132,16 @@ export function extractSource(html: string): string | null {
  * Nhúng YAML dạng JSON trong <script type="application/json">.
  * Escape `<` thành `<` để nội dung không bao giờ đóng được thẻ script; JSON.parse khôi phục chính xác.
  */
-function embedSource(text: string, name: string | undefined): string {
-  const json = JSON.stringify({ format: 'archcode/yaml', version: 1, name, text })
+function embedSource(text: string, options: HtmlOptions): string {
+  const layout =
+    options.layout !== undefined ? { name: options.layoutName, text: options.layout } : undefined;
+  const json = JSON.stringify({
+    format: 'archcode/yaml',
+    version: 1,
+    name: options.sourceName,
+    text,
+    layout,
+  })
     .replace(/</g, '\\u003c')
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029');
@@ -129,6 +173,7 @@ async function renderModel(
   model: ArchitectureModel,
   diagnostics: Diagnostic[],
   options: HtmlOptions,
+  layout: LayoutFile | undefined,
 ): Promise<string> {
   const graph = buildGraph(model);
   const hasIssues = diagnostics.some((d) => d.severity !== 'info');
@@ -143,7 +188,7 @@ async function renderModel(
 
   return `<nav class="toc"><div class="wrap">${nav}</div></nav>
 <main class="wrap">
-${await renderDiagrams(model, diagnostics)}
+${await renderDiagrams(model, diagnostics, layout)}
 ${renderComponents(model, graph)}
 ${renderRelationships(model)}
 ${hasIssues ? renderValidation(diagnostics, options) : ''}
@@ -153,6 +198,7 @@ ${hasIssues ? renderValidation(diagnostics, options) : ''}
 async function renderDiagrams(
   model: ArchitectureModel,
   diagnostics: Diagnostic[],
+  layout: LayoutFile | undefined,
 ): Promise<string> {
   const panels: string[] = [];
   const tabs: string[] = [];
@@ -166,16 +212,17 @@ async function renderDiagrams(
     if (!resolved.components.length) {
       canvas = '<div class="empty">View không có component nào.</div>';
     } else {
-      const layout = await layoutView(resolved);
-      const svg = renderSvg(layout, {
+      const pinned = viewLayout(layout, view.id);
+      const box = await layoutView(resolved, { positions: pinned.nodes, waypoints: pinned.edges });
+      const svg = renderSvg(box, {
         diagnostics,
         idPrefix: `${viewId}-`,
         standalone: false,
         title: view.name,
       });
       // Khung giữ tỉ lệ của diagram: không dư khoảng trống khi thu nhỏ, không phóng to quá kích thước gốc.
-      const w = Math.ceil(layout.width + 16);
-      const hgt = Math.ceil(layout.height + 16);
+      const w = Math.ceil(box.width + 16);
+      const hgt = Math.ceil(box.height + 16);
       canvas = `<div class="canvas" style="aspect-ratio:${w}/${hgt};max-width:${w}px">${svg}</div>`;
     }
     panels.push(`<div class="view card" id="view-${viewId}" role="tabpanel">
@@ -254,7 +301,7 @@ function renderValidation(diagnostics: Diagnostic[], options: HtmlOptions): stri
       (
         d,
       ) => `<tr><td><span class="sev ${d.severity}">${d.severity === 'error' ? 'Lỗi' : 'Cảnh báo'}</span></td>
-<td>${d.line ? `<code>${file}${d.line}:${d.column ?? 1}</code>` : '<span class="none">—</span>'}</td>
+<td>${d.line ? `<code>${d.file ? `${h(d.file)}:` : file}${d.line}:${d.column ?? 1}</code>` : d.file ? `<code>${h(d.file)}</code>` : '<span class="none">—</span>'}</td>
 <td>${h(d.message)}${d.hint ? `<div class="hint">↳ ${h(d.hint)}</div>` : ''}</td>
 <td><code>${h(d.rule ?? d.code)}</code></td></tr>`,
     )

@@ -57,13 +57,31 @@ export function resolveView(model: ArchitectureModel, view: View): ResolvedView 
   return { view, components, relationships, groups };
 }
 
+// Cache theo model (model là bất biến sau normalize): tra group cha O(1) thay vì duyệt mảng mỗi lần.
+const parentCache = new WeakMap<ArchitectureModel, Map<string, string | undefined>>();
+const chainCache = new WeakMap<ArchitectureModel, Map<string, readonly string[]>>();
+
 /** Group của component và toàn bộ group cha, từ trong ra ngoài. An toàn với vòng lặp parent. */
 export function groupChain(model: ArchitectureModel, groupId: string | undefined): string[] {
+  if (!groupId) return [];
+  let chains = chainCache.get(model);
+  if (!chains) chainCache.set(model, (chains = new Map()));
+  const cached = chains.get(groupId);
+  if (cached) return [...cached];
+
+  let parents = parentCache.get(model);
+  if (!parents) {
+    parents = new Map();
+    // Trùng ID: giữ group khai báo đầu tiên (giống Array.find trước đây).
+    for (const g of model.groups) if (!parents.has(g.id)) parents.set(g.id, g.parent);
+    parentCache.set(model, parents);
+  }
   const chain: string[] = [];
-  let current = groupId;
+  let current: string | undefined = groupId;
   while (current && !chain.includes(current)) {
     chain.push(current);
-    current = model.groups.find((g) => g.id === current)?.parent;
+    current = parents.get(current);
   }
-  return chain;
+  chains.set(groupId, chain);
+  return [...chain];
 }
