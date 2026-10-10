@@ -1,0 +1,9 @@
+version: 1
+system:
+  id: warning-only
+  name: Warning only
+components:
+  - id: api
+    type: service
+  - id: lonely
+    type: load-balancer

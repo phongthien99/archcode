@@ -1,0 +1,23 @@
+version: '1'
+system:
+  id: Wrong_Type!
+  name: Wrong Types
+components:
+  - id: api
+    type: service
+    tags: critical
+    colour: red
+  - id: api-2
+    type: servise
+relationships:
+  - from: api
+    to: api
+views:
+  - id: v
+    name: V
+    include: '*'
+    direction: up
+rules:
+  - id: r
+    type: no-spaghetti
+    severity: fatal

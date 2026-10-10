@@ -1,0 +1,9 @@
+version: 1
+system:
+  id: broken
+  name: Broken
+components:
+  - id: a
+    type: service
+   - id: b
+    type: service

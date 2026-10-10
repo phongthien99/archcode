@@ -1,0 +1,8 @@
+{
+  "name": "@archcode/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ArchCode web app (static SPA) — triển khai ở Sprint 3",
+  "scripts": {}
+}

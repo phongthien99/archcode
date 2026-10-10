@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+coverage
+dist
+docs
+fixtures/invalid/syntax-error.yaml
+**/__snapshots__

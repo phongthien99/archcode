@@ -1,0 +1,13 @@
+version: 1
+system:
+  id: missing-field
+  name: Missing Field
+components:
+  - id: api
+    type: service
+  - name: Không có ID
+    type: service
+  - id: db
+relationships:
+  - from: api
+    to: db

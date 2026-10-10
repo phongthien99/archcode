@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://archcode.dev/schema/v1/architecture.schema.json",
+  "title": "ArchCode architecture model",
+  "description": "Mô tả kiến trúc hệ thống theo hướng Architecture as Code (schema v1).",
+  "type": "object",
+  "required": ["version", "system"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "description": "Phiên bản schema. Hiện tại: 1."
+    },
+    "system": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "groups": { "$ref": "#/definitions/groups" },
+        "components": { "$ref": "#/definitions/components" },
+        "relationships": { "$ref": "#/definitions/relationships" }
+      }
+    },
+    "groups": { "$ref": "#/definitions/groups" },
+    "components": { "$ref": "#/definitions/components" },
+    "relationships": { "$ref": "#/definitions/relationships" },
+    "views": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/view" }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/rule" }
+    }
+  },
+  "definitions": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "description": "ID ổn định: chữ thường, số, '.', '_', '-'; bắt đầu bằng chữ hoặc số."
+    },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stringOrList": {
+      "type": ["string", "array"],
+      "items": { "type": "string" }
+    },
+    "groups": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/group" }
+    },
+    "group": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "description": "Ví dụ: domain, cluster, network, trust-zone."
+        },
+        "description": { "type": "string" },
+        "parent": { "type": "string", "description": "ID của group cha." }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/component" }
+    },
+    "component": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "description": "person, system, external, frontend, gateway, service, database, queue, storage, cache hoặc custom type.",
+          "examples": [
+            "person",
+            "system",
+            "external",
+            "frontend",
+            "gateway",
+            "service",
+            "database",
+            "queue",
+            "storage",
+            "cache"
+          ]
+        },
+        "group": { "type": "string", "description": "ID của group chứa component." },
+        "technology": { "type": "string" },
+        "description": { "type": "string" },
+        "owner": { "type": "string", "description": "Team hoặc người chịu trách nhiệm." },
+        "tags": { "$ref": "#/definitions/stringList" }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relationship" }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "type": {
+          "type": "string",
+          "description": "Giao thức hoặc kiểu quan hệ: http, grpc, sql, amqp, event..."
+        },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "technology": { "type": "string" }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "include": { "$ref": "#/definitions/stringList" },
+        "exclude": { "$ref": "#/definitions/stringList" },
+        "direction": { "enum": ["TB", "LR"] }
+      }
+    },
+    "matcher": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/stringOrList" },
+        "type": { "$ref": "#/definitions/stringOrList" },
+        "group": { "$ref": "#/definitions/stringOrList" },
+        "tag": { "$ref": "#/definitions/stringOrList" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "type": { "enum": ["no-circular", "no-orphan", "forbidden"] },
+        "severity": { "enum": ["error", "warning"] },
+        "description": { "type": "string" },
+        "from": { "$ref": "#/definitions/matcher" },
+        "to": { "$ref": "#/definitions/matcher" },
+        "unless": { "enum": ["same-group"] }
+      }
+    }
+  }
+}

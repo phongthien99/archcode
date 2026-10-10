@@ -1,0 +1,23 @@
+version: 1
+system:
+  id: broken-ref
+  name: Broken Reference
+components:
+  - id: document-service
+    type: service
+    group: cor
+  - id: document-db
+    type: database
+groups:
+  - id: core
+    name: Core
+relationships:
+  - from: document-service
+    to: documnet-db
+    type: sql
+  - from: payment-service
+    to: document-db
+views:
+  - id: main
+    name: Main
+    include: [document-servise, 'group:core']

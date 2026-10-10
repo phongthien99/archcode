@@ -1,0 +1,133 @@
+# Fixture chuẩn: dùng chung cho test core, CLI và template web.
+version: 1
+
+system:
+  id: document-platform
+  name: Document Platform
+  description: Nền tảng upload, lưu trữ và tìm kiếm tài liệu
+
+groups:
+  - id: core
+    name: Core Domain
+    type: domain
+  - id: data
+    name: Data Layer
+    type: trust-zone
+    parent: core
+
+components:
+  - id: end-user
+    name: Người dùng
+    type: person
+    description: Nhân viên upload và tra cứu tài liệu
+
+  - id: web-app
+    name: Web App
+    type: frontend
+    technology: React
+    owner: team-web
+
+  - id: api-gateway
+    name: API Gateway
+    type: gateway
+    technology: Kong
+    owner: team-platform
+
+  - id: document-service
+    name: Document Service
+    type: service
+    group: core
+    technology: Go
+    owner: team-docs
+    description: Quản lý metadata và vòng đời tài liệu
+    tags: [critical]
+
+  - id: search-service
+    name: Search Service
+    type: service
+    group: core
+    technology: Java / Spring Boot
+    owner: team-search
+
+  - id: document-db
+    name: Document DB
+    type: database
+    group: data
+    technology: PostgreSQL 16
+
+  - id: object-storage
+    name: Object Storage
+    type: storage
+    group: data
+    technology: S3-compatible (MinIO)
+
+  - id: document-events
+    name: Document Events
+    type: queue
+    technology: RabbitMQ
+
+  - id: identity-provider
+    name: Identity Provider
+    type: external
+    technology: Keycloak
+
+relationships:
+  - from: end-user
+    to: web-app
+    type: https
+    label: Sử dụng
+  - from: web-app
+    to: api-gateway
+    type: https
+  - from: api-gateway
+    to: identity-provider
+    type: oidc
+    label: Xác thực token
+  - from: api-gateway
+    to: document-service
+    type: http
+    label: REST /documents
+  - from: api-gateway
+    to: search-service
+    type: http
+    label: REST /search
+  - from: document-service
+    to: document-db
+    type: sql
+  - from: document-service
+    to: object-storage
+    type: s3
+    label: Lưu file
+  - from: document-service
+    to: document-events
+    type: amqp
+    label: Publish DocumentUploaded
+  - from: document-events
+    to: search-service
+    type: amqp
+    label: Consume & index
+
+views:
+  - id: overview
+    name: Tổng quan hệ thống
+    include: ['*']
+    direction: LR
+  - id: core-domain
+    name: Core Domain
+    include: ['group:core', api-gateway]
+    exclude: ['type:storage']
+
+rules:
+  - id: no-cycles
+    type: no-circular
+    severity: error
+  - id: no-orphans
+    type: no-orphan
+    severity: warning
+  - id: no-cross-domain-db
+    type: forbidden
+    severity: error
+    description: Service không được truy cập database của domain khác
+    from: { type: service }
+    to: { type: database }
+    unless: same-group

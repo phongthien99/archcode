@@ -1,0 +1,21 @@
+version: 1
+system:
+  id: duplicate
+  name: Duplicate IDs
+groups:
+  - id: api
+    name: API group
+components:
+  - id: api
+    type: service
+  - id: db
+    type: database
+  - id: db
+    type: cache
+relationships:
+  - id: r1
+    from: api
+    to: db
+  - id: r1
+    from: db
+    to: api
