@@ -28,7 +28,7 @@ describe('sourceRefOf', () => {
   const parsed = parseYaml(fixture('document-platform.yaml'));
 
   it('trả vị trí của giá trị lồng nhau', () => {
-    expect(sourceRefOf(parsed, ['components', 3, 'id'])).toEqual({ line: 36, column: 9 });
+    expect(sourceRefOf(parsed, ['components', 3, 'id'])).toEqual({ line: 37, column: 9 });
   });
 
   it('lùi về node cha gần nhất khi path không tồn tại', () => {
@@ -37,6 +37,6 @@ describe('sourceRefOf', () => {
   });
 
   it('trả vị trí gốc khi path trống', () => {
-    expect(sourceRefOf(parsed, [])).toEqual({ line: 2, column: 1 });
+    expect(sourceRefOf(parsed, [])).toEqual({ line: 3, column: 1 });
   });
 });

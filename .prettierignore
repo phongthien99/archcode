@@ -4,3 +4,5 @@ dist
 docs
 fixtures/invalid/syntax-error.yaml
 **/__snapshots__
+test-results
+playwright-report

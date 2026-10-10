@@ -11,7 +11,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": undefined,
       "source": {
         "column": 5,
-        "line": 19,
+        "line": 20,
       },
       "tags": [],
       "technology": undefined,
@@ -25,7 +25,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": "team-web",
       "source": {
         "column": 5,
-        "line": 24,
+        "line": 25,
       },
       "tags": [],
       "technology": "React",
@@ -39,7 +39,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": "team-platform",
       "source": {
         "column": 5,
-        "line": 30,
+        "line": 31,
       },
       "tags": [],
       "technology": "Kong",
@@ -53,7 +53,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": "team-docs",
       "source": {
         "column": 5,
-        "line": 36,
+        "line": 37,
       },
       "tags": [
         "critical",
@@ -69,7 +69,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": "team-search",
       "source": {
         "column": 5,
-        "line": 45,
+        "line": 46,
       },
       "tags": [],
       "technology": "Java / Spring Boot",
@@ -83,7 +83,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": undefined,
       "source": {
         "column": 5,
-        "line": 52,
+        "line": 53,
       },
       "tags": [],
       "technology": "PostgreSQL 16",
@@ -97,7 +97,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": undefined,
       "source": {
         "column": 5,
-        "line": 58,
+        "line": 59,
       },
       "tags": [],
       "technology": "S3-compatible (MinIO)",
@@ -111,7 +111,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": undefined,
       "source": {
         "column": 5,
-        "line": 64,
+        "line": 65,
       },
       "tags": [],
       "technology": "RabbitMQ",
@@ -125,7 +125,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "owner": undefined,
       "source": {
         "column": 5,
-        "line": 69,
+        "line": 70,
       },
       "tags": [],
       "technology": "Keycloak",
@@ -140,7 +140,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "parent": undefined,
       "source": {
         "column": 5,
-        "line": 10,
+        "line": 11,
       },
       "type": "domain",
     },
@@ -151,7 +151,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "parent": "core",
       "source": {
         "column": 5,
-        "line": 13,
+        "line": 14,
       },
       "type": "trust-zone",
     },
@@ -165,7 +165,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "Sử dụng",
       "source": {
         "column": 5,
-        "line": 75,
+        "line": 76,
       },
       "technology": undefined,
       "to": "web-app",
@@ -179,7 +179,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": undefined,
       "source": {
         "column": 5,
-        "line": 79,
+        "line": 80,
       },
       "technology": undefined,
       "to": "api-gateway",
@@ -193,7 +193,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "Xác thực token",
       "source": {
         "column": 5,
-        "line": 82,
+        "line": 83,
       },
       "technology": undefined,
       "to": "identity-provider",
@@ -207,7 +207,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "REST /documents",
       "source": {
         "column": 5,
-        "line": 86,
+        "line": 87,
       },
       "technology": undefined,
       "to": "document-service",
@@ -221,7 +221,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "REST /search",
       "source": {
         "column": 5,
-        "line": 90,
+        "line": 91,
       },
       "technology": undefined,
       "to": "search-service",
@@ -235,7 +235,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": undefined,
       "source": {
         "column": 5,
-        "line": 94,
+        "line": 95,
       },
       "technology": undefined,
       "to": "document-db",
@@ -249,7 +249,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "Lưu file",
       "source": {
         "column": 5,
-        "line": 97,
+        "line": 98,
       },
       "technology": undefined,
       "to": "object-storage",
@@ -263,7 +263,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "Publish DocumentUploaded",
       "source": {
         "column": 5,
-        "line": 101,
+        "line": 102,
       },
       "technology": undefined,
       "to": "document-events",
@@ -277,7 +277,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "label": "Consume & index",
       "source": {
         "column": 5,
-        "line": 105,
+        "line": 106,
       },
       "technology": undefined,
       "to": "search-service",
@@ -293,7 +293,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "severity": "error",
       "source": {
         "column": 5,
-        "line": 121,
+        "line": 122,
       },
       "to": undefined,
       "type": "no-circular",
@@ -307,7 +307,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "severity": "warning",
       "source": {
         "column": 5,
-        "line": 124,
+        "line": 125,
       },
       "to": undefined,
       "type": "no-orphan",
@@ -325,7 +325,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "severity": "error",
       "source": {
         "column": 5,
-        "line": 127,
+        "line": 128,
       },
       "to": {
         "type": [
@@ -342,7 +342,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
     "name": "Document Platform",
     "source": {
       "column": 3,
-      "line": 5,
+      "line": 6,
     },
   },
   "version": 1,
@@ -359,7 +359,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "name": "Tổng quan hệ thống",
       "source": {
         "column": 5,
-        "line": 111,
+        "line": 112,
       },
     },
     {
@@ -377,7 +377,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
       "name": "Core Domain",
       "source": {
         "column": 5,
-        "line": 115,
+        "line": 116,
       },
     },
   ],

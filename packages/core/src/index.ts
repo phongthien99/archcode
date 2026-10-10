@@ -30,4 +30,11 @@ export {
 export { renderSvg, type RenderOptions } from './render/svg';
 export { diagramCss, darkThemeVariables, TYPE_COLORS } from './render/theme';
 export { escapeXml } from './render/text';
-export { generateHtml, extractSource, type HtmlOptions, type HtmlResult } from './export/html';
+export {
+  generateHtml,
+  extractSource,
+  extractEmbeddedSource,
+  type EmbeddedSource,
+  type HtmlOptions,
+  type HtmlResult,
+} from './export/html';

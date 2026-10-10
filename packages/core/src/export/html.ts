@@ -66,18 +66,30 @@ ${options.embedSource === false ? '' : embedSource(text, options.sourceName)}
   return { html, validation };
 }
 
-/** Đọc lại YAML đã nhúng trong file HTML export (dùng cho web app). */
-export function extractSource(html: string): string | null {
+export interface EmbeddedSource {
+  text: string;
+  /** Tên file YAML gốc lúc xuất (nếu có). */
+  name?: string;
+}
+
+/** Đọc lại YAML (kèm tên file gốc) đã nhúng trong file HTML export. */
+export function extractEmbeddedSource(html: string): EmbeddedSource | null {
   const match = new RegExp(
     `<script type="application/json" id="${SOURCE_SCRIPT_ID}">([\\s\\S]*?)</script>`,
   ).exec(html);
   if (!match) return null;
   try {
-    const data = JSON.parse(match[1]!) as { format?: string; text?: unknown };
-    return data.format === 'archcode/yaml' && typeof data.text === 'string' ? data.text : null;
+    const data = JSON.parse(match[1]!) as { format?: string; text?: unknown; name?: unknown };
+    if (data.format !== 'archcode/yaml' || typeof data.text !== 'string') return null;
+    return { text: data.text, name: typeof data.name === 'string' ? data.name : undefined };
   } catch {
     return null;
   }
+}
+
+/** Đọc lại YAML đã nhúng trong file HTML export. */
+export function extractSource(html: string): string | null {
+  return extractEmbeddedSource(html)?.text ?? null;
 }
 
 /**

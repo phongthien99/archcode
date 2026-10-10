@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractSource, generateHtml } from '../src';
+import { extractEmbeddedSource, extractSource, generateHtml } from '../src';
 import { fixture, yaml } from './helpers';
 
 describe('generateHtml', async () => {
@@ -40,8 +40,9 @@ describe('generateHtml', async () => {
     expect((await generateHtml(text, { sourceName: 'architecture.yaml' })).html).toBe(html);
   });
 
-  it('nhúng YAML gốc và đọc lại chính xác', () => {
+  it('nhúng YAML gốc và đọc lại chính xác, kèm tên file', () => {
     expect(extractSource(html)).toBe(text);
+    expect(extractEmbeddedSource(html)).toEqual({ text, name: 'architecture.yaml' });
   });
 
   it('embedSource: false thì không nhúng', async () => {

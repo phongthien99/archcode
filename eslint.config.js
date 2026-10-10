@@ -3,7 +3,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**'] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -18,10 +26,16 @@ export default tseslint.config(
     files: [
       'packages/cli/**/*.ts',
       'packages/core/test/**/*.ts',
-      '*.config.{js,ts}',
-      'packages/*/vitest.config.ts',
+      'apps/web/e2e/**/*.ts',
+      'apps/web/src/**/*.test.ts',
+      '**/*.config.{js,ts}',
     ],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/**/*.test.ts'],
+    languageOptions: { globals: { ...globals.browser, ...globals.worker } },
   },
   // Core phải chạy được trong trình duyệt, Web Worker và Node: cấm API riêng của từng môi trường.
   {

@@ -1,0 +1,122 @@
+# Template: hệ thống thương mại điện tử theo kiến trúc microservices
+version: 1
+
+system:
+  id: ecommerce
+  name: E-commerce Platform
+  description: Bán hàng trực tuyến — mỗi domain là một service với database riêng, giao tiếp qua Kafka
+
+groups:
+  - id: catalog
+    name: Catalog
+    type: domain
+  - id: ordering
+    name: Ordering
+    type: domain
+  - id: payment
+    name: Payment
+    type: domain
+
+components:
+  - id: customer
+    name: Khách hàng
+    type: person
+  - id: storefront
+    name: Storefront
+    type: frontend
+    technology: Next.js
+    owner: team-web
+  - id: api-gateway
+    name: API Gateway
+    type: gateway
+    technology: Envoy
+    owner: team-platform
+
+  - id: product-service
+    name: Product Service
+    type: service
+    group: catalog
+    technology: Node.js
+    owner: team-catalog
+  - id: product-db
+    name: Product DB
+    type: database
+    group: catalog
+    technology: MongoDB
+  - id: product-cache
+    name: Product Cache
+    type: cache
+    group: catalog
+    technology: Redis
+
+  - id: order-service
+    name: Order Service
+    type: service
+    group: ordering
+    technology: Java / Spring Boot
+    owner: team-ordering
+  - id: order-db
+    name: Order DB
+    type: database
+    group: ordering
+    technology: PostgreSQL
+
+  - id: payment-service
+    name: Payment Service
+    type: service
+    group: payment
+    technology: Go
+    owner: team-payment
+  - id: payment-db
+    name: Payment DB
+    type: database
+    group: payment
+    technology: PostgreSQL
+
+  - id: order-events
+    name: order-events
+    type: queue
+    technology: Kafka topic
+  - id: payment-events
+    name: payment-events
+    type: queue
+    technology: Kafka topic
+  - id: payment-gateway
+    name: Payment Gateway
+    type: external
+    technology: Stripe
+
+relationships:
+  - { from: customer, to: storefront, type: https, label: Mua sắm }
+  - { from: storefront, to: api-gateway, type: https }
+  - { from: api-gateway, to: product-service, type: http, label: /products }
+  - { from: api-gateway, to: order-service, type: http, label: /orders }
+  - { from: product-service, to: product-db, type: tcp }
+  - { from: product-service, to: product-cache, type: tcp }
+  - { from: order-service, to: order-db, type: sql }
+  - { from: order-service, to: order-events, type: kafka, label: OrderPlaced }
+  - { from: order-events, to: payment-service, type: kafka, label: Consume }
+  - { from: payment-service, to: payment-db, type: sql }
+  - { from: payment-service, to: payment-gateway, type: https, label: Charge }
+  - { from: payment-service, to: payment-events, type: kafka, label: PaymentCompleted }
+
+views:
+  - id: overview
+    name: Tổng quan
+    include: ['*']
+  - id: ordering-flow
+    name: Luồng đặt hàng
+    include: ['group:ordering', 'group:payment', 'type:queue', payment-gateway]
+    direction: LR
+
+rules:
+  - id: no-cycles
+    type: no-circular
+    severity: error
+  - id: database-per-service
+    type: forbidden
+    severity: error
+    description: Mỗi service chỉ truy cập database của domain mình
+    from: { type: service }
+    to: { type: [database, cache] }
+    unless: same-group

@@ -12,7 +12,7 @@ describe('normalize', () => {
   it('gắn vị trí nguồn cho từng phần tử', () => {
     const { model } = validate(fixture('document-platform.yaml'));
     const service = model!.components.find((c) => c.id === 'document-service')!;
-    expect(service.source).toEqual({ line: 36, column: 5 });
+    expect(service.source).toEqual({ line: 37, column: 5 });
   });
 
   it('`system.components` và `components` ở cấp gốc cho cùng model', () => {

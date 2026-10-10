@@ -13,7 +13,10 @@
     "coverage": "pnpm --filter @archcode/core coverage",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "dev": "pnpm --filter @archcode/web dev",
+    "build:web": "pnpm --filter @archcode/web build",
+    "e2e": "pnpm --filter @archcode/web e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

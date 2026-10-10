@@ -1,4 +1,5 @@
-# Fixture chuẩn: dùng chung cho test core, CLI và template web.
+# Ví dụ: nền tảng upload và tra cứu tài liệu.
+# (Cũng là fixture chuẩn của bộ test — giữ file này luôn hợp lệ.)
 version: 1
 
 system:

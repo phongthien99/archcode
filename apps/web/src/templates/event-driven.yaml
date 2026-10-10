@@ -1,0 +1,87 @@
+# Template: kiến trúc event-driven với outbox và các consumer độc lập
+version: 1
+
+system:
+  id: iot-telemetry
+  name: IoT Telemetry
+  description: Thu thập và xử lý dữ liệu cảm biến theo hướng sự kiện
+
+groups:
+  - id: ingestion
+    name: Ingestion
+    type: domain
+  - id: processing
+    name: Processing
+    type: domain
+
+components:
+  - id: devices
+    name: Thiết bị IoT
+    type: external
+    technology: MQTT client
+  - id: mqtt-broker
+    name: MQTT Broker
+    type: queue
+    group: ingestion
+    technology: EMQX
+  - id: ingest-service
+    name: Ingest Service
+    type: service
+    group: ingestion
+    technology: Rust
+    description: Kiểm tra và chuẩn hóa bản tin
+  - id: telemetry-stream
+    name: Telemetry Stream
+    type: queue
+    technology: Kafka
+  - id: alert-service
+    name: Alert Service
+    type: service
+    group: processing
+    technology: Python
+  - id: aggregator
+    name: Aggregator
+    type: service
+    group: processing
+    technology: Flink
+  - id: timeseries-db
+    name: Time-series DB
+    type: database
+    group: processing
+    technology: TimescaleDB
+  - id: notifier
+    name: Notification Provider
+    type: external
+    technology: Twilio
+  - id: operator
+    name: Người vận hành
+    type: person
+  - id: dashboard
+    name: Dashboard
+    type: frontend
+    technology: Grafana
+
+relationships:
+  - { from: devices, to: mqtt-broker, type: mqtt, label: Gửi số đo }
+  - { from: mqtt-broker, to: ingest-service, type: mqtt }
+  - { from: ingest-service, to: telemetry-stream, type: kafka, label: ReadingReceived }
+  - { from: telemetry-stream, to: alert-service, type: kafka }
+  - { from: telemetry-stream, to: aggregator, type: kafka }
+  - { from: aggregator, to: timeseries-db, type: sql }
+  - { from: alert-service, to: notifier, type: https, label: Gửi cảnh báo }
+  - { from: operator, to: dashboard, type: https }
+  - { from: dashboard, to: timeseries-db, type: sql, label: Truy vấn }
+
+views:
+  - id: pipeline
+    name: Pipeline sự kiện
+    include: ['*']
+    direction: LR
+
+rules:
+  - id: no-cycles
+    type: no-circular
+    severity: error
+  - id: no-orphans
+    type: no-orphan
+    severity: warning

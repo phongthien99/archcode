@@ -171,6 +171,21 @@
 
 **Sprint goal:** Bản web static đầu tiên: gõ YAML bên trái, diagram cập nhật bên phải, xem lỗi, tải HTML.
 
+> **Trạng thái (2026-10-10): ✅ Hoàn thành 33/33 task.** Unit test 114 (core 99, CLI 13, web 2) + E2E 14 (Playwright trên bản build production).
+>
+> Kết quả đo:
+> - Bundle chính **217 KB gzip** (mục tiêu < 400 KB). ELK nằm trong chunk worker riêng (517 KB gzip), tải song song, không chặn UI.
+> - Hiệu năng 200 component / 400 quan hệ: validate **54 ms**, layout **749 ms** (ngân sách ≤ 1s).
+> - E2E xác nhận: HTML xuất từ web **giống hệt từng byte** output của CLI; **không có request nào** ra ngoài origin (ràng buộc C-03).
+>
+> Khác biệt / phát hiện:
+> - **elkjs trong Web Worker:** `elk.bundled.js` tưởng mình là worker riêng của ELK và chiếm `self.onmessage`. Xử lý bằng `apps/web/src/worker/elk-shim.ts` (tạo `document` giả lúc khởi tạo ELK). Core không bị ảnh hưởng.
+> - **S3-PREVIEW-05 (tooltip):** dùng `<title>` gốc của SVG (đã có từ Sprint 2) thay vì tooltip tự vẽ.
+> - **S3-EDITOR-04:** autocomplete ID áp dụng cho `from`, `to`, `group`, `parent`, selector `include/exclude` và matcher của rule.
+> - **Mở file HTML:** nhận diện theo nội dung (không chỉ đuôi `.html`) và khôi phục tên file YAML gốc đã nhúng.
+> - **Template e-commerce** ban đầu bị chính rule `no-circular` bắt lỗi (service vừa publish vừa consume cùng một topic). Đã tách topic. Ghi nhận cho backlog: cân nhắc tùy chọn bỏ qua quan hệ bất đồng bộ khi kiểm tra vòng phụ thuộc.
+> - **S3-QA-04:** workflow GitHub Pages đã sẵn sàng nhưng **chưa chạy thật**, vì repo chưa có remote.
+
 ### 3.1 Khung web (WEB)
 
 | ID | Task | Ước lượng | Phụ thuộc | DoD |
