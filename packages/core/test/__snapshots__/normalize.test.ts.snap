@@ -77,7 +77,7 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
     },
     {
       "description": undefined,
-      "group": "data",
+      "group": "core",
       "id": "document-db",
       "name": "Document DB",
       "owner": undefined,

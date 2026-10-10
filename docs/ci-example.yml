@@ -1,0 +1,33 @@
+# Ví dụ GitHub Actions: validate kiến trúc trên mỗi PR, build HTML và đính kèm làm artifact.
+# Copy vào .github/workflows/architecture.yml của repo dự án.
+name: Architecture
+
+on:
+  pull_request:
+    paths: ['architecture.yaml']
+  push:
+    branches: [main]
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Chặn merge nếu vi phạm rule mức error (exit code 1).
+      - name: Validate
+        run: npx @archcode/cli validate architecture.yaml
+
+      # --force: vẫn sinh tài liệu để reviewer xem lỗi trên diagram; bước này vẫn fail nếu có lỗi.
+      - name: Build HTML
+        if: always()
+        run: npx @archcode/cli build architecture.yaml -o out/architecture.html --force
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: architecture-docs
+          path: out/architecture.html

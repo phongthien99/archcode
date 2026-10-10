@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../src';
-import { fixture, summarize, yaml } from './helpers';
+import { fixture, summarize, withoutRules, yaml } from './helpers';
 
-const codes = (text: string) => validate(text).diagnostics.map((d) => d.code);
+const codes = (text: string) => withoutRules(validate(text).diagnostics).map((d) => d.code);
 
 describe('tham chiếu', () => {
   const { diagnostics } = validate(fixture('invalid/broken-ref.yaml'));
@@ -34,7 +34,7 @@ relationships: [{ from: a, to: g }]
 });
 
 describe('trùng ID', () => {
-  const { diagnostics } = validate(fixture('invalid/duplicate-id.yaml'));
+  const diagnostics = withoutRules(validate(fixture('invalid/duplicate-id.yaml')).diagnostics);
 
   it('báo trùng giữa group và component, giữa component, giữa relationship', () => {
     expect(summarize(diagnostics)).toEqual([
@@ -129,7 +129,9 @@ describe('khác', () => {
   });
 
   it('type tự định nghĩa chỉ là cảnh báo', () => {
-    const { diagnostics } = validate(yaml('components: [{ id: lb, type: load-balancer }]\n'));
+    const diagnostics = withoutRules(
+      validate(yaml('components: [{ id: lb, type: load-balancer }]\n')).diagnostics,
+    );
     expect(diagnostics).toMatchObject([{ code: 'unknown-component-type', severity: 'warning' }]);
   });
 

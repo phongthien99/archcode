@@ -19,7 +19,7 @@ describe('resolveView', () => {
 
   it('group: lấy cả group con, exclude theo type, chỉ giữ quan hệ có hai đầu trong view', () => {
     const v = view('core-domain');
-    // data là group con của core; object-storage bị loại bởi exclude type:storage.
+    // object-storage (group data, con của core) khớp group:core nhưng bị loại bởi exclude type:storage.
     expect(v.components.map((c) => c.id)).toEqual([
       'api-gateway',
       'document-service',
@@ -31,7 +31,7 @@ describe('resolveView', () => {
       'api-gateway->search-service',
       'document-service->document-db',
     ]);
-    expect(v.groups.map((g) => g.id)).toEqual(['core', 'data']);
+    expect(v.groups.map((g) => g.id)).toEqual(['core']);
   });
 
   it('kết quả ổn định qua nhiều lần chạy', () => {

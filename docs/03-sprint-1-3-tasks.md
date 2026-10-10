@@ -94,6 +94,18 @@
 
 **Sprint goal:** Từ YAML sinh ra một file HTML tự chứa, mở offline được, bằng một lệnh CLI.
 
+> **Trạng thái (2026-10-10): ✅ Hoàn thành 31/32 task** (bỏ S2-LAYOUT-06). 110 test pass (core 97, CLI 13).
+>
+> Khác biệt so với kế hoạch:
+> - **S2-LAYOUT-06 (fallback dagre): bỏ** — xem [spike ELK](./spikes/elk.md).
+> - **Ngân sách layout** 200 node / 400 edge đổi từ 500ms thành **≤ 1s trong Web Worker** (đo thực tế ~0,66s với `thoroughness: 1`).
+> - **S2-HTML-07:** YAML nhúng dạng `<script type="application/json">` (escape `<` thành `\u003c`) thay vì `text/yaml`, để khôi phục chính xác kể cả khi YAML chứa `</script>`. Hàm đọc lại: `extractSource(html)`.
+> - **S2-HTML-08:** `generateHtml()` trả `{ html, validation }` thay vì chỉ chuỗi, để CLI và web dùng luôn diagnostics.
+> - **S2-CLI-01:** CLI đóng gói bằng esbuild thành `dist/archcode.mjs` (bin `archcode`), chạy bằng `node` không cần tsx.
+> - **`--force`** vẫn ghi file nhưng exit code vẫn là 1, để CI không vô tình pass.
+> - **Fixture chuẩn:** `document-db` chuyển sang group `core` (theo quyết định same-group); các vi phạm rule chuyển sang `fixtures/invalid/rule-violations.yaml`.
+> - Rule kiến trúc chạy ngay trong `validate()`, nên `archcode validate` cũng chặn được vi phạm rule trong CI.
+
 ### 2.1 Analysis & rules (ANA)
 
 | ID | Task | Ước lượng | Phụ thuộc | DoD |

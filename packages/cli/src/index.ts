@@ -1,10 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
+import pkg from '../package.json' with { type: 'json' };
+import { buildCommand } from './commands/build';
 import { validateCommand } from './commands/validate';
-
-const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
-  version: string;
-};
 
 const program = new Command()
   .name('archcode')
@@ -15,7 +12,7 @@ const program = new Command()
 
 program
   .command('validate')
-  .description('Kiểm tra cú pháp, schema và ngữ nghĩa của file kiến trúc')
+  .description('Kiểm tra cú pháp, schema, ngữ nghĩa và rule kiến trúc')
   .argument('<files...>', 'Một hoặc nhiều file YAML')
   .option('--strict', 'Coi cảnh báo là lỗi (exit code 1)', false)
   .option('-f, --format <format>', 'Định dạng output: text | json', 'text')
@@ -24,4 +21,18 @@ program
     process.exitCode = validateCommand(files, options);
   });
 
-program.parse();
+program
+  .command('build')
+  .description('Sinh tài liệu HTML tự chứa (hoặc SVG của một view) từ file kiến trúc')
+  .argument('<file>', 'File YAML')
+  .option('-o, --output <path>', 'File đầu ra (mặc định: cạnh file YAML)')
+  .option('-f, --format <format>', 'html | svg', 'html')
+  .option('--view <id>', 'View cần xuất khi --format svg (mặc định: view đầu tiên)')
+  .option('--force', 'Vẫn ghi file khi model có lỗi (exit code vẫn là 1)', false)
+  .option('--no-embed-source', 'Không nhúng YAML gốc vào HTML')
+  .option('--no-color', 'Tắt màu')
+  .action(async (file: string, options) => {
+    process.exitCode = await buildCommand(file, options);
+  });
+
+await program.parseAsync();

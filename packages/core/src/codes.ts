@@ -29,6 +29,11 @@ export const DIAGNOSTIC_CODES = {
   'empty-selector': 'Selector của view không khớp component nào',
   'empty-view': 'View không có component nào',
   'invalid-rule': 'Rule khai báo thiếu thông tin',
+
+  // Rule kiến trúc
+  'circular-dependency': 'Vòng phụ thuộc giữa các component',
+  'orphan-component': 'Component không có quan hệ nào',
+  'forbidden-dependency': 'Quan hệ bị cấm bởi rule',
 } as const;
 
 export type DiagnosticCode = keyof typeof DIAGNOSTIC_CODES;

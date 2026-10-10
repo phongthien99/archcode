@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { validate, type Diagnostic } from '@archcode/core';
-import pc from 'picocolors';
-import { count, formatDiagnostic, type Colors } from '../format';
+import { colors, count, printDiagnostics } from '../format';
 
 export interface ValidateOptions {
   strict: boolean;
@@ -46,29 +45,9 @@ export function validateCommand(files: string[], options: ValidateOptions): numb
     });
   }
 
-  if (options.format === 'json') {
-    console.log(JSON.stringify(reports, null, 2));
-  } else {
-    printText(reports, pc.createColors(options.color && pc.isColorSupported));
-  }
+  if (options.format === 'json') console.log(JSON.stringify(reports, null, 2));
+  else printDiagnostics(reports, colors(options.color));
 
   if (unreadable) return 2;
   return reports.every((r) => r.valid) ? 0 : 1;
-}
-
-function printText(reports: FileReport[], c: Colors) {
-  for (const report of reports) {
-    for (const d of report.diagnostics) console.log(formatDiagnostic(report.file, d, c));
-  }
-
-  const errors = reports.reduce((n, r) => n + r.errorCount, 0);
-  const warnings = reports.reduce((n, r) => n + r.warningCount, 0);
-  const fileWord = `${reports.length} file`;
-  if (errors === 0 && warnings === 0) {
-    console.log(c.green(`✔ ${fileWord} hợp lệ`));
-  } else {
-    if (reports.some((r) => r.diagnostics.length)) console.log('');
-    const summary = `${errors} lỗi, ${warnings} cảnh báo trong ${fileWord}`;
-    console.log(errors ? c.red(`✖ ${summary}`) : c.yellow(`⚠ ${summary}`));
-  }
 }

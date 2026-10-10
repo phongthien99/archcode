@@ -1,7 +1,11 @@
 import type { Diagnostic } from '@archcode/core';
-import type pc from 'picocolors';
+import pc from 'picocolors';
 
 export type Colors = ReturnType<typeof pc.createColors>;
+
+export function colors(enabled: boolean): Colors {
+  return pc.createColors(enabled && pc.isColorSupported);
+}
 
 /**
  * `file:line:col  severity  code  message` — định dạng mà terminal VS Code
@@ -28,4 +32,29 @@ export function count(diagnostics: Diagnostic[]) {
     errors: diagnostics.filter((d) => d.severity === 'error').length,
     warnings: diagnostics.filter((d) => d.severity === 'warning').length,
   };
+}
+
+/** In diagnostics của nhiều file và dòng tổng kết. */
+export function printDiagnostics(
+  reports: { file: string; diagnostics: Diagnostic[] }[],
+  c: Colors,
+  { quietWhenClean = false } = {},
+): void {
+  for (const report of reports) {
+    for (const d of report.diagnostics) console.log(formatDiagnostic(report.file, d, c));
+  }
+  const all = reports.flatMap((r) => r.diagnostics);
+  const { errors, warnings } = count(all);
+  const fileWord = `${reports.length} file`;
+  if (errors === 0 && warnings === 0) {
+    if (!quietWhenClean) console.log(c.green(`✔ ${fileWord} hợp lệ`));
+    return;
+  }
+  console.log('');
+  const summary = `${errors} lỗi, ${warnings} cảnh báo trong ${fileWord}`;
+  console.log(errors ? c.red(`✖ ${summary}`) : c.yellow(`⚠ ${summary}`));
+}
+
+export function formatSize(bytes: number): string {
+  return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
 }

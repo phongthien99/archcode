@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../src';
-import { fixture, yaml } from './helpers';
+import { fixture, withoutRules, yaml } from './helpers';
 
 describe('normalize', () => {
   it('fixture chuẩn → model khớp snapshot', () => {
@@ -25,7 +25,7 @@ describe('normalize', () => {
     const strip = (m: typeof nested.model) =>
       m!.components.map(({ source: _source, ...rest }) => rest);
     expect(strip(nested.model)).toEqual(strip(root.model));
-    expect(nested.diagnostics).toEqual([]);
+    expect(withoutRules(nested.diagnostics)).toEqual([]);
   });
 
   it('báo lỗi khi một mục khai báo ở cả hai nơi', () => {

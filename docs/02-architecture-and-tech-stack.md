@@ -331,7 +331,7 @@ Cùng hàm `generateHtml(model, layout, diagnostics)` chạy trên web (tải v�
 |---|---|
 | Bundle tải ban đầu (gzip) | < 400 KB (ELK.js tải lazy trong worker) |
 | Parse + validate 200 node | < 50 ms |
-| Layout 200 node / 400 edge | < 500 ms (trong worker, không chặn UI) |
+| Layout 200 node / 400 edge | ≤ 1 s (trong worker, không chặn UI) — điều chỉnh sau [spike ELK](./spikes/elk.md) |
 | Kích thước HTML export | < 300 KB cho 100 component |
 
 ### 9.3 Hệ quả của việc "không server"

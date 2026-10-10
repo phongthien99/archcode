@@ -106,10 +106,21 @@ export interface RelatedLocation {
   column: number;
 }
 
+export type ElementKind = 'system' | 'group' | 'component' | 'relationship' | 'view' | 'rule';
+
+/** Phần tử trong model mà diagnostic nói tới — dùng để tô viền đỏ trên diagram. */
+export interface DiagnosticTarget {
+  kind: ElementKind;
+  id: string;
+}
+
 export interface Diagnostic {
   severity: Severity;
   code: DiagnosticCode;
   message: string;
+  /** ID của rule sinh ra diagnostic (với lỗi do rule kiến trúc). */
+  rule?: string;
+  target?: DiagnosticTarget;
   /** Gợi ý sửa lỗi, ví dụ "Có phải ý bạn là `document-db`?" */
   hint?: string;
   path?: YamlPath;

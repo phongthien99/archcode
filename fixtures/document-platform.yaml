@@ -52,7 +52,7 @@ components:
   - id: document-db
     name: Document DB
     type: database
-    group: data
+    group: core
     technology: PostgreSQL 16
 
   - id: object-storage

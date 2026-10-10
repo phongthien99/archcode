@@ -5,6 +5,7 @@
   "type": "module",
   "description": "ArchCode CLI: validate và build kiến trúc trong CI",
   "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --minify --outfile=dist/archcode.mjs --banner:js=\"#!/usr/bin/env node\nimport { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
@@ -12,5 +13,14 @@
     "@archcode/core": "workspace:*",
     "commander": "^15.0.0",
     "picocolors": "^1.1.1"
-  }
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "bin": {
+    "archcode": "./dist/archcode.mjs"
+  },
+  "files": [
+    "dist"
+  ]
 }

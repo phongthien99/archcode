@@ -1,0 +1,72 @@
+# Vi phạm rule: vòng phụ thuộc, component mồ côi, truy cập DB khác domain.
+version: 1
+system:
+  id: rule-violations
+  name: Rule Violations
+
+groups:
+  - id: orders
+    name: Orders
+  - id: billing
+    name: Billing
+  - id: billing-data
+    name: Billing Data
+    parent: billing
+
+components:
+  - id: order-service
+    type: service
+    group: orders
+  - id: order-db
+    type: database
+    group: orders
+  - id: billing-service
+    type: service
+    group: billing
+  - id: billing-db
+    type: database
+    group: billing
+  - id: invoice-db
+    type: database
+    group: billing-data
+  - id: legacy-report
+    type: service
+  - id: customer
+    type: person
+
+relationships:
+  - from: order-service
+    to: order-db
+    type: sql
+  - from: order-service
+    to: billing-service
+    type: http
+  - from: billing-service
+    to: order-service
+    type: http
+  - from: billing-service
+    to: billing-db
+    type: sql
+  # Khác domain → vi phạm
+  - from: order-service
+    to: billing-db
+    type: sql
+  # Group con (billing-data) không được tính là cùng group với billing → vi phạm
+  - from: billing-service
+    to: invoice-db
+    type: sql
+
+rules:
+  - id: no-cycles
+    type: no-circular
+    severity: error
+  - id: no-orphans
+    type: no-orphan
+    severity: warning
+  - id: no-cross-domain-db
+    type: forbidden
+    severity: error
+    description: Service không được truy cập database của domain khác
+    from: { type: service }
+    to: { type: database }
+    unless: same-group
