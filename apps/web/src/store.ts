@@ -130,6 +130,16 @@ export interface AppState {
   ): Promise<MutationResult | null>;
   /** Ghi vị trí node của view vào layout (kéo thả) — không đụng YAML. */
   commitPositions(viewId: string, positions: Record<string, Point>): void;
+  /**
+   * Ghi điểm gấp của một connector (null/rỗng = bỏ, quay về tự định tuyến). Ghim luôn vị trí node
+   * hiện tại để HTML xuất ra dùng layout thủ công, khớp với canvas.
+   */
+  commitWaypoints(
+    viewId: string,
+    edgeId: string,
+    points: Point[] | null,
+    positions: Record<string, Point>,
+  ): void;
   /** Bỏ ghim cả view hoặc chỉ các node chỉ định → tự sắp xếp lại. */
   relayout(viewId: string, ids?: string[]): void;
   undo(): void;
@@ -433,6 +443,24 @@ export const useApp = create<AppState>()((set, get) => {
         layout: {
           ...layout,
           views: { ...layout.views, [viewId]: { nodes, edges: layout.views[viewId]?.edges ?? {} } },
+        },
+        sticky: { ...get().sticky, [viewId]: { ...get().sticky[viewId], ...positions } },
+      });
+      schedule(true);
+    },
+    commitWaypoints(viewId, edgeId, points, positions) {
+      const { layout } = get();
+      const view = layout.views[viewId];
+      const edges = { ...view?.edges };
+      const next = points?.map((p) => ({ x: Math.round(p.x), y: Math.round(p.y) }));
+      if (next?.length) edges[edgeId] = next;
+      else if (edgeId in edges) delete edges[edgeId];
+      else return;
+      record('layout');
+      set({
+        layout: {
+          ...layout,
+          views: { ...layout.views, [viewId]: { nodes: { ...view?.nodes, ...positions }, edges } },
         },
         sticky: { ...get().sticky, [viewId]: { ...get().sticky[viewId], ...positions } },
       });

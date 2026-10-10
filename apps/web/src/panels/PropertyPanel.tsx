@@ -12,6 +12,13 @@ export function PropertyPanel() {
   const model = useApp((s) => s.model);
   const diagnostics = useApp((s) => s.diagnostics);
   const stale = useApp((s) => s.stale);
+  const viewId = useApp((s) => s.viewId);
+  const hasWaypoints = useApp(
+    (s) =>
+      s.selection?.kind === 'relationship' &&
+      !!s.viewId &&
+      !!s.layout.views[s.viewId]?.edges[s.selection.id],
+  );
 
   const element =
     selection && model
@@ -73,6 +80,15 @@ export function PropertyPanel() {
             components={model.components}
             update={update}
           />
+        )}
+        {kind === 'relationship' && hasWaypoints && viewId && (
+          <button
+            type="button"
+            onClick={() => useApp.getState().commitWaypoints(viewId, selection.id, null, {})}
+            title="Bỏ mọi điểm gấp, connector tự định tuyến lại"
+          >
+            Bỏ điểm gấp
+          </button>
         )}
       </fieldset>
       {own.length > 0 && (

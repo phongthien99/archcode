@@ -26,7 +26,13 @@ import '@xyflow/react/dist/base.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../store';
 import type { CanvasData } from '../worker/api';
-import { ArrowMarkers, EdgeView, type ArchEdgeType } from './EdgeView';
+import {
+  ArrowMarkers,
+  EdgeView,
+  WaypointContext,
+  type ArchEdgeType,
+  type WaypointEditor,
+} from './EdgeView';
 import { ComponentNode, GroupNode, type ComponentNodeType, type GroupNodeType } from './nodes';
 import { Palette, PALETTE_MIME } from './Palette';
 import { setRoutes } from './routes';
@@ -106,11 +112,14 @@ function CanvasInner() {
   const selection = useApp((s) => s.selection);
   const focus = useApp((s) => s.focus);
   const docVersion = useApp((s) => s.docVersion);
+  const waypoints = useApp((s) => (s.viewId ? s.layout.views[s.viewId]?.edges : undefined));
   const rf = useReactFlow();
 
   const [components, setComponents] = useState<ComponentNodeType[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
+  /** Điểm gấp đang kéo (chưa ghi vào layout). */
+  const [draft, setDraft] = useState<{ id: string; points: Point[] } | null>(null);
   /** Khung group cố định trong lúc kéo node: kéo ra ngoài viền là rời group (S5-LAYOUT-08). */
   const [frozen, setFrozenState] = useState<Map<string, GroupBoxResult> | null>(null);
   const frozenRef = useRef<Map<string, GroupBoxResult> | null>(null);
@@ -237,10 +246,16 @@ function CanvasInner() {
     setRoutes(
       routeEdges(
         boxes,
-        canvas.edges.map((e) => ({ id: e.id, from: e.from, to: e.to, label: e.label })),
+        canvas.edges.map((e) => ({
+          id: e.id,
+          from: e.from,
+          to: e.to,
+          label: e.label,
+          waypoints: draft?.id === e.id ? draft.points : waypoints?.[e.id],
+        })),
       ),
     );
-  }, [canvas, components]);
+  }, [canvas, components, waypoints, draft]);
 
   // Căn khung khi lần đầu hiển thị một view. View trống thì giữ nguyên góc nhìn: node kéo vào
   // phải nằm đúng chỗ thả, không bị căn lại.
@@ -278,6 +293,23 @@ function CanvasInner() {
         ]),
       ),
     [],
+  );
+
+  const componentsRef = useRef(components);
+  componentsRef.current = components;
+
+  const waypointEditor = useMemo<WaypointEditor>(
+    () => ({
+      readOnly,
+      draft: (id, points) => setDraft(points ? { id, points } : null),
+      commit: (id, points) => {
+        if (viewId)
+          useApp
+            .getState()
+            .commitWaypoints(viewId, id, points, currentPositions(componentsRef.current));
+      },
+    }),
+    [readOnly, viewId, currentPositions],
   );
 
   const onNodesChange = useCallback((changes: NodeChange<ComponentNodeType | GroupNodeType>[]) => {
@@ -349,9 +381,6 @@ function CanvasInner() {
     )?.find((el) => el.id === target.id)?.source;
     if (source) revealLine(source.line, source.column, false);
   };
-
-  const componentsRef = useRef(components);
-  componentsRef.current = components;
 
   const onNodeDragStart = useCallback(
     (_: unknown, node: ComponentNodeType | GroupNodeType) => {
@@ -544,42 +573,44 @@ function CanvasInner() {
           View có {nodeCount} component — nên tách thành nhiều view nhỏ để dễ đọc
         </div>
       )}
-      <ReactFlow<ComponentNodeType | GroupNodeType, ArchEdgeType>
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onSelectionChange={onSelectionChange}
-        onNodeClick={(_, n) => reveal(targetOf(n.id))}
-        onEdgeClick={(_, edge) => reveal(targetOf(edge.id))}
-        onPaneClick={() => useApp.getState().select(null, 'canvas')}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDragStop={onNodeDragStop}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        connectionMode={ConnectionMode.Loose}
-        connectionRadius={28}
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        deleteKeyCode={null}
-        snapToGrid
-        snapGrid={SNAP}
-        minZoom={0.1}
-        maxZoom={4}
-        elevateNodesOnSelect={false}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-        <MiniMap
-          pannable
-          zoomable
-          className="minimap"
-          nodeClassName={(n) => (n.type === 'group' ? 'mm-group' : 'mm-node')}
-        />
-        <Controls showInteractive={false} />
-      </ReactFlow>
+      <WaypointContext.Provider value={waypointEditor}>
+        <ReactFlow<ComponentNodeType | GroupNodeType, ArchEdgeType>
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onSelectionChange={onSelectionChange}
+          onNodeClick={(_, n) => reveal(targetOf(n.id))}
+          onEdgeClick={(_, edge) => reveal(targetOf(edge.id))}
+          onPaneClick={() => useApp.getState().select(null, 'canvas')}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
+          onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          connectionMode={ConnectionMode.Loose}
+          connectionRadius={28}
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
+          deleteKeyCode={null}
+          snapToGrid
+          snapGrid={SNAP}
+          minZoom={0.1}
+          maxZoom={4}
+          elevateNodesOnSelect={false}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+          <MiniMap
+            pannable
+            zoomable
+            className="minimap"
+            nodeClassName={(n) => (n.type === 'group' ? 'mm-group' : 'mm-node')}
+          />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </WaypointContext.Provider>
     </div>
   );
 }

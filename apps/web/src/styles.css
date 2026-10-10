@@ -521,6 +521,23 @@ button:disabled {
 .ac-arrow-selected {
   fill: var(--accent);
 }
+.ac-waypoints circle {
+  pointer-events: all;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.ac-waypoint {
+  fill: var(--panel);
+  cursor: move;
+}
+.ac-waypoint-add {
+  fill: var(--accent);
+  opacity: 0.55;
+  cursor: copy;
+}
+.ac-waypoint-add:hover {
+  opacity: 1;
+}
 .react-flow__edge .ac-label {
   pointer-events: none;
 }

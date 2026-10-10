@@ -203,4 +203,43 @@ test.describe('Sprint 5 — tìm kiếm', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('.search')).toHaveCount(0);
   });
+
+  test('connector: kéo để thêm/dời điểm gấp, double-click để bỏ, ghi vào file layout', async ({
+    app: page,
+  }) => {
+    await setCursor(page, 'label: Sử dụng');
+    const edge = page.locator('.ac-edge.ac-selected');
+    await expect(edge).toHaveCount(1);
+    const path = edge.locator('path').first();
+    const before = await path.getAttribute('d');
+
+    const add = edge.getByTestId('waypoint-add').first();
+    await add.scrollIntoViewIfNeeded();
+    await dragBy(page, add, 60, 80);
+    await expect.poll(() => path.getAttribute('d')).not.toBe(before);
+    const bends = await edge.getByTestId('waypoint').count();
+    expect(bends).toBeGreaterThan(0);
+    await expect(page.getByText(/Bố cục thủ công/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Bỏ điểm gấp' })).toBeVisible();
+
+    const downloads: string[] = [];
+    page.on('download', async (d) => downloads.push(`${d.suggestedFilename()}|${await d.path()}`));
+    await page.getByTestId('save').click();
+    await expect.poll(() => downloads.length).toBe(2);
+    const layoutFile = downloads.find((d) => d.includes('.layout.yaml'))!.split('|')[1]!;
+    expect(readFileSync(layoutFile, 'utf8')).toMatch(
+      /\n {4}edges:\n {6}end-user->web-app: \{ points: \[\[-?\d+, -?\d+\]/,
+    );
+
+    // Bỏ điểm gấp → về đường tự định tuyến (tọa độ node đã được ghim và làm tròn).
+    const segments = (d: string | null) => d?.split('L').length;
+    await page.getByRole('button', { name: 'Bỏ điểm gấp' }).click();
+    await expect.poll(async () => segments(await path.getAttribute('d'))).toBe(segments(before));
+    await expect(page.getByRole('button', { name: 'Bỏ điểm gấp' })).toHaveCount(0);
+
+    await dragBy(page, edge.getByTestId('waypoint-add').first(), 60, 80);
+    await expect(edge.getByTestId('waypoint')).toHaveCount(bends);
+    await edge.getByTestId('waypoint').first().dblclick();
+    await expect(edge.getByTestId('waypoint')).toHaveCount(bends - 1);
+  });
 });

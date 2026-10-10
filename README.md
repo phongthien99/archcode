@@ -15,6 +15,7 @@ pnpm dev          # http://localhost:5173
 
 - Kéo một loại component từ **palette** vào canvas để tạo. Thả vào trong khung group thì component thuộc group đó.
 - Kéo từ chấm tròn ở cạnh node sang node khác để nối quan hệ. Giao thức được gợi ý theo đích: database → `sql`, queue → `amqp`…
+- Chọn một connector để chỉnh đường đi: kéo chấm nhỏ giữa đoạn để thêm điểm gấp, kéo chấm tròn để dời, double-click để bỏ. Mũi tên bám vào cạnh node hướng về điểm gấp gần nhất, nên kéo điểm gấp cũng là cách chọn cạnh nối. **Bỏ điểm gấp** (panel Thuộc tính) để quay lại tự định tuyến. Điểm gấp lưu trong file layout.
 - Chọn node/connector/group → sửa trong **Thuộc tính** (Enter hoặc rời ô để ghi). Đổi ID cập nhật mọi tham chiếu: quan hệ, view, rule, file layout.
 - `Delete` để xóa. Nếu phần tử còn được tham chiếu trong views/rules, ứng dụng hỏi lại trước khi xóa.
 - Kéo node để sắp xếp; kéo ra ngoài viền group là rời group. **Sắp xếp lại** bỏ mọi vị trí đã ghim (hoặc chỉ các node đang chọn).
