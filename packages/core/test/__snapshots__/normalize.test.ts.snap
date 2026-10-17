@@ -352,13 +352,17 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
   "views": [
     {
       "description": undefined,
-      "direction": "LR",
       "exclude": [],
       "id": "overview",
       "implicit": false,
       "include": [
         "*",
       ],
+      "layout": {
+        "algorithm": "layered",
+        "direction": "LR",
+        "edges": "orthogonal",
+      },
       "name": "Tổng quan hệ thống",
       "source": {
         "column": 5,
@@ -367,7 +371,6 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
     },
     {
       "description": undefined,
-      "direction": "TB",
       "exclude": [
         "type:storage",
       ],
@@ -377,6 +380,11 @@ exports[`normalize > fixture chuẩn → model khớp snapshot 1`] = `
         "group:core",
         "api-gateway",
       ],
+      "layout": {
+        "algorithm": "layered",
+        "direction": "TB",
+        "edges": "orthogonal",
+      },
       "name": "Core Domain",
       "source": {
         "column": 5,

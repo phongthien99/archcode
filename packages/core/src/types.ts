@@ -1,4 +1,5 @@
 import type { DiagnosticCode } from './codes';
+import type { EDGE_STYLES, LAYOUT_ALGORITHMS } from './constants';
 
 /** Vị trí trong file YAML nguồn (1-based). */
 export interface SourceRef {
@@ -51,7 +52,20 @@ export interface Relationship {
   source?: SourceRef;
 }
 
-export type LayoutDirection = 'TB' | 'LR';
+export type LayoutDirection = 'TB' | 'LR' | 'BT' | 'RL';
+
+export type LayoutAlgorithm = (typeof LAYOUT_ALGORITHMS)[number];
+
+export type EdgeStyle = (typeof EDGE_STYLES)[number];
+
+/** Cách auto-layout một view (khối `layout` của view). */
+export interface LayoutSettings {
+  algorithm: LayoutAlgorithm;
+  direction: LayoutDirection;
+  edges: EdgeStyle;
+  /** Node gốc cho `tree`/`radial`; không khai báo → node có nhiều liên kết nhất. */
+  root?: string;
+}
 
 export interface View {
   id: string;
@@ -60,7 +74,8 @@ export interface View {
   /** Selector: `*`, `<id>`, `type:<t>`, `group:<g>`, `tag:<t>`. */
   include: string[];
   exclude: string[];
-  direction: LayoutDirection;
+  /** Luôn có giá trị sau khi normalize; `direction` ở cấp view (cú pháp cũ) được gộp vào đây. */
+  layout: LayoutSettings;
   /** true nếu view được sinh tự động vì YAML không khai báo `views`. */
   implicit: boolean;
   source?: SourceRef;

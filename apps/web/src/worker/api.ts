@@ -4,6 +4,7 @@ import type {
   Diagnostic,
   ElementRange,
   EmbeddedSource,
+  LayoutDirection,
   MindmapModel,
   MutationResult,
   Point,
@@ -51,7 +52,7 @@ export interface CanvasEdge {
 }
 
 export interface CanvasData {
-  direction: 'TB' | 'LR';
+  direction: LayoutDirection;
   nodes: CanvasNode[];
   groups: CanvasGroup[];
   edges: CanvasEdge[];

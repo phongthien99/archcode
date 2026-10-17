@@ -134,7 +134,33 @@
         "description": { "type": "string" },
         "include": { "$ref": "#/definitions/stringList" },
         "exclude": { "$ref": "#/definitions/stringList" },
-        "direction": { "enum": ["TB", "LR"] }
+        "direction": {
+          "enum": ["TB", "LR", "BT", "RL"],
+          "description": "Cú pháp cũ, tương đương layout.direction"
+        },
+        "layout": { "$ref": "#/definitions/viewLayout" }
+      }
+    },
+    "viewLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "enum": ["layered", "tree", "radial", "stress", "force", "grid"],
+          "description": "Thuật toán auto-layout; mặc định layered"
+        },
+        "direction": {
+          "enum": ["TB", "LR", "BT", "RL"],
+          "description": "Hướng chính; mặc định TB"
+        },
+        "edges": {
+          "enum": ["orthogonal", "polyline", "splines"],
+          "description": "Kiểu đường connector; mặc định orthogonal"
+        },
+        "root": {
+          "type": "string",
+          "description": "Component gốc cho tree/radial; mặc định là component có nhiều liên kết nhất"
+        }
       }
     },
     "matcher": {

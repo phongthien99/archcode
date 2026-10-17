@@ -56,3 +56,9 @@ export const ASYNC_RELATIONSHIP_TYPES: readonly string[] = [
 export function isAsyncRelationship(rel: { type?: string }): boolean {
   return rel.type !== undefined && ASYNC_RELATIONSHIP_TYPES.includes(rel.type);
 }
+
+/** Thuật toán auto-layout của view (`layout.algorithm`). */
+export const LAYOUT_ALGORITHMS = ['layered', 'tree', 'radial', 'stress', 'force', 'grid'] as const;
+
+/** Kiểu đường connector (`layout.edges`). */
+export const EDGE_STYLES = ['orthogonal', 'polyline', 'splines'] as const;

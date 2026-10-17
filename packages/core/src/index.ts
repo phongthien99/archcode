@@ -6,6 +6,8 @@ export {
   SCHEMA_VERSION,
   ID_PATTERN,
   DEFAULT_VIEW_ID,
+  LAYOUT_ALGORITHMS,
+  EDGE_STYLES,
   type BuiltinComponentType,
 } from './constants';
 export { parseYaml, type ParsedYaml } from './parser/parse';

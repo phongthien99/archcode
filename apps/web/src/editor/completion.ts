@@ -1,11 +1,24 @@
 import type { ArchitectureModel } from '@archcode/core';
-import { COMPONENT_TYPES, RELATIONSHIP_TYPES } from '@archcode/core/constants';
+import {
+  COMPONENT_TYPES,
+  EDGE_STYLES,
+  LAYOUT_ALGORITHMS,
+  RELATIONSHIP_TYPES,
+} from '@archcode/core/constants';
 import schema from '@archcode/core/schema.json';
 import type { Completion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import type { EditorState } from '@codemirror/state';
 
 type Definition =
-  'root' | 'system' | 'group' | 'component' | 'relationship' | 'view' | 'rule' | 'matcher';
+  | 'root'
+  | 'system'
+  | 'group'
+  | 'component'
+  | 'relationship'
+  | 'view'
+  | 'viewLayout'
+  | 'rule'
+  | 'matcher';
 
 const SECTION_DEFINITION: Record<string, Definition> = {
   groups: 'group',
@@ -59,6 +72,7 @@ export function contextAt(state: EditorState, lineNumber: number, indent: number
   if (!ancestors.length) return 'root';
   const last = ancestors[ancestors.length - 1]!;
   if ((last === 'from' || last === 'to') && ancestors.includes('rules')) return 'matcher';
+  if (last === 'layout' && ancestors.includes('views')) return 'viewLayout';
   return (
     SECTION_DEFINITION[last] ??
     (ancestors[0] === 'system' && ancestors.length === 1 ? 'system' : 'root')
@@ -82,7 +96,13 @@ function valueOptions(def: Definition, key: string, model: ArchitectureModel | n
     case 'severity':
       return enums(['error', 'warning']);
     case 'direction':
-      return enums(['TB', 'LR']);
+      return enums(['TB', 'LR', 'BT', 'RL']);
+    case 'algorithm':
+      return def === 'viewLayout' ? enums(LAYOUT_ALGORITHMS) : [];
+    case 'edges':
+      return def === 'viewLayout' ? enums(EDGE_STYLES) : [];
+    case 'root':
+      return def === 'viewLayout' ? ids(components, 'variable') : [];
     case 'unless':
       return enums(['same-group']);
     case 'from':

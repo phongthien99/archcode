@@ -29,6 +29,7 @@ export const DIAGNOSTIC_CODES = {
   'empty-selector': 'Selector của view không khớp component nào',
   'empty-view': 'View không có component nào',
   'invalid-rule': 'Rule khai báo thiếu thông tin',
+  'layout-option-conflict': 'Tùy chọn layout của view được khai báo ở hai nơi',
 
   // Rule kiến trúc
   'circular-dependency': 'Vòng phụ thuộc giữa các component',

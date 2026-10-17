@@ -63,6 +63,13 @@ export interface LayoutOptions {
   waypoints?: Record<string, Point[]>;
 }
 
+const ELK_DIRECTION: Record<LayoutDirection, string> = {
+  TB: 'DOWN',
+  BT: 'UP',
+  LR: 'RIGHT',
+  RL: 'LEFT',
+};
+
 /** View từ ngưỡng này trở lên dùng thoroughness thấp để giữ thời gian layout ~1s (xem docs/spikes/elk.md). */
 const LARGE_VIEW = 100;
 
@@ -70,7 +77,7 @@ let elk: InstanceType<typeof ELK> | undefined;
 
 /** Auto-layout một view bằng ELK layered. Deterministic: cùng input → cùng tọa độ. */
 export async function layoutView(view: ResolvedView, options: LayoutOptions = {}): Promise<Layout> {
-  const direction = options.direction ?? view.view.direction;
+  const direction = options.direction ?? view.view.layout.direction;
   const positions = options.positions;
   if (positions && view.components.some((c) => Object.hasOwn(positions, c.id))) {
     return manualLayout({ view, direction, positions, waypoints: options.waypoints });
@@ -90,7 +97,7 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
-      'elk.direction': direction === 'LR' ? 'RIGHT' : 'DOWN',
+      'elk.direction': ELK_DIRECTION[direction],
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.edgeRouting': 'ORTHOGONAL',
       'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',

@@ -190,14 +190,16 @@ function gridCells(radius: number, direction: LayoutDirection): [number, number]
   for (let i = -radius; i <= radius; i++) {
     for (let j = -radius; j <= radius; j++) if (i || j) cells.push([i, j]);
   }
-  const [main, cross] = direction === 'LR' ? [0, 1] : [1, 0];
+  const [main, cross] = direction === 'LR' || direction === 'RL' ? [0, 1] : [1, 0];
+  // BT/RL: hướng chính là trên/trái (âm).
+  const sign = direction === 'BT' || direction === 'RL' ? -1 : 1;
   const score = (c: [number, number]) =>
     Math.max(Math.abs(c[0]), Math.abs(c[1])) * 100 + Math.abs(c[0]) + Math.abs(c[1]);
   return cells.sort(
     (a, b) =>
       score(a) - score(b) ||
-      // Hướng chính trước (phải với LR, dưới với TB), rồi tới hướng phụ.
-      Number(b[main] > 0) - Number(a[main] > 0) ||
+      // Hướng chính trước (phải với LR, dưới với TB…), rồi tới hướng phụ.
+      Number(b[main] * sign > 0) - Number(a[main] * sign > 0) ||
       Math.abs(a[cross]) - Math.abs(b[cross]) ||
       b[cross] - a[cross],
   );

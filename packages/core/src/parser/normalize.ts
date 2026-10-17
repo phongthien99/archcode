@@ -1,10 +1,11 @@
-import { DEFAULT_VIEW_ID, SCHEMA_VERSION } from '../constants';
+import { DEFAULT_VIEW_ID, EDGE_STYLES, LAYOUT_ALGORITHMS, SCHEMA_VERSION } from '../constants';
 import type {
   ArchitectureModel,
   Component,
   Diagnostic,
   Group,
   LayoutDirection,
+  LayoutSettings,
   Relationship,
   Rule,
   RuleMatcher,
@@ -16,6 +17,12 @@ import type {
 } from '../types';
 import type { ParsedYaml } from './parse';
 import { sourceRefOf } from './sourceRef';
+
+const DEFAULT_LAYOUT: LayoutSettings = {
+  algorithm: 'layered',
+  direction: 'TB',
+  edges: 'orthogonal',
+};
 
 type Raw = Record<string, unknown>;
 
@@ -158,6 +165,31 @@ export function normalize(data: Raw, parsed: ParsedYaml): NormalizeResult {
   });
 
   // --- views
+  /** Gộp `direction` cũ ở cấp view với khối `layout`; khai báo cả hai → lỗi, `layout` thắng. */
+  const layoutSettings = (raw: Raw, path: YamlPath): LayoutSettings => {
+    const block = isObj(raw.layout) ? raw.layout : {};
+    const legacy = direction(raw.direction);
+    if (raw.direction !== undefined && block.direction !== undefined) {
+      const other = ref([...path, 'layout', 'direction']);
+      diagnostics.push({
+        severity: 'error',
+        code: 'layout-option-conflict',
+        message: '"direction" được khai báo ở cả view và "layout"; chỉ dùng "layout.direction"',
+        path: [...path, 'direction'],
+        ...ref([...path, 'direction']),
+        related: other ? [{ message: '"layout.direction"', ...other }] : undefined,
+      });
+    }
+    const settings: LayoutSettings = {
+      algorithm: oneOf(LAYOUT_ALGORITHMS, block.algorithm) ?? DEFAULT_LAYOUT.algorithm,
+      direction: direction(block.direction) ?? legacy ?? DEFAULT_LAYOUT.direction,
+      edges: oneOf(EDGE_STYLES, block.edges) ?? DEFAULT_LAYOUT.edges,
+    };
+    const root = str(block.root);
+    if (root) settings.root = root;
+    return settings;
+  };
+
   const views: View[] = [];
   const rawViews = Array.isArray(data.views) ? data.views : [];
   rawViews.forEach((raw, i) => {
@@ -172,7 +204,7 @@ export function normalize(data: Raw, parsed: ParsedYaml): NormalizeResult {
           description: str(raw.description),
           include: include.length ? include : ['*'],
           exclude: strList(raw.exclude),
-          direction: direction(raw.direction),
+          layout: layoutSettings(raw, path),
           implicit: false,
           source: ref(path),
         },
@@ -186,7 +218,7 @@ export function normalize(data: Raw, parsed: ParsedYaml): NormalizeResult {
       name: 'Toàn bộ hệ thống',
       include: ['*'],
       exclude: [],
-      direction: 'TB',
+      layout: { ...DEFAULT_LAYOUT },
       implicit: true,
     });
   }
@@ -267,8 +299,12 @@ function matcher(value: unknown): RuleMatcher | undefined {
   return result;
 }
 
-function direction(value: unknown): LayoutDirection {
-  return value === 'LR' ? 'LR' : 'TB';
+function direction(value: unknown): LayoutDirection | undefined {
+  return value === 'TB' || value === 'LR' || value === 'BT' || value === 'RL' ? value : undefined;
+}
+
+function oneOf<T extends string>(values: readonly T[], value: unknown): T | undefined {
+  return values.find((v) => v === value);
 }
 
 export function isObj(value: unknown): value is Raw {
