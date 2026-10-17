@@ -1,3 +1,4 @@
+import { semantic } from '@archcode/core/tokens';
 import { core } from '../worker/client';
 
 export function download(content: BlobPart, fileName: string, type: string): void {
@@ -50,7 +51,7 @@ export async function svgToPng(svg: string): Promise<Blob> {
     canvas.width = img.naturalWidth * scale;
     canvas.height = img.naturalHeight * scale;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = semantic.light.surface;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.scale(scale, scale);
     ctx.drawImage(img, 0, 0);

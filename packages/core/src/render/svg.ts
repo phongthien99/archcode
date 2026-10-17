@@ -1,7 +1,7 @@
 import type { EdgeRoute, GroupBox, Layout, NodeBox } from '../layout/elk';
 import { isAsyncRelationship } from '../constants';
 import type { Component, Diagnostic, Severity } from '../types';
-import type { NodeContent } from './nodeContent';
+import { CARD, type NodeContent } from './nodeContent';
 import { escapeXml as x } from './text';
 import { colorKey, diagramCss } from './theme';
 
@@ -64,8 +64,8 @@ function renderGroup(box: GroupBox, sev: Severity | undefined): string {
   const label = group.type ? `${group.name} [${group.type}]` : group.name;
   return (
     `<g class="ac-group${stateClass(sev)}" data-kind="group" data-id="${x(group.id)}">` +
-    `<rect x="${box.x}" y="${box.y}" width="${box.width}" height="${box.height}" rx="10"/>` +
-    `<text x="${box.x + 12}" y="${box.y + 22}">${x(label)}</text></g>`
+    `<rect x="${box.x}" y="${box.y}" width="${box.width}" height="${box.height}" rx="12"/>` +
+    `<text x="${box.x + 16}" y="${box.y + 26}">${x(label)}</text></g>`
   );
 }
 
@@ -92,71 +92,112 @@ export function nodeTooltip(c: Component): string {
     .join('\n');
 }
 
-/** Shape + chữ của một node tại `box` — dùng chung cho SVG xuất ra và node trên canvas. */
+/** Card + icon + chữ của một node tại `box` — dùng chung cho SVG xuất ra và node trên canvas. */
 export function nodeBodySvg(
   type: string,
   content: NodeContent,
   box: { x: number; y: number; width: number; height: number },
 ): string {
-  const cx = box.x + box.width / 2;
+  const { icon } = content;
   const text = content.lines
     .map(
       (l) =>
-        `<text class="${l.className}" x="${cx}" y="${box.y + l.y}" text-anchor="middle">${x(l.text)}</text>`,
+        `<text class="${l.className}" x="${box.x + l.x}" y="${box.y + l.y}">${x(l.text)}</text>`,
     )
     .join('');
-  return shapeSvg(type, box) + text;
+  const divider =
+    content.dividerY === undefined
+      ? ''
+      : `<line class="ac-divider" x1="${box.x + CARD.padX}" y1="${box.y + content.dividerY}" x2="${box.x + box.width - CARD.padX}" y2="${box.y + content.dividerY}"/>`;
+  return (
+    shapeSvg(type, box) +
+    `<g class="ac-icon" transform="translate(${box.x + icon.x},${box.y + icon.y})">${iconSvg(type)}</g>` +
+    divider +
+    text
+  );
 }
 
 /**
- * Shape theo component type. Phần tử chính có class `ac-shape` để nhận màu và trạng thái lỗi.
- * Dùng chung cho SVG xuất ra và node trên canvas.
+ * Khung node: mọi loại đều là card chữ nhật bo 8px (spec: cấu trúc nhất quán).
+ * Loại component phân biệt bằng icon (`iconSvg`) và footer `type · technology`.
+ * Phần tử chính có class `ac-shape` để nhận màu và trạng thái lỗi.
  */
 export function shapeSvg(
-  type: string,
+  _type: string,
   b: { x: number; y: number; width: number; height: number },
 ): string {
-  const { x: px, y: py, width: w, height: h } = b;
-  switch (type) {
-    case 'person': {
-      const body = 30;
-      return (
-        `<circle class="ac-shape" cx="${px + w / 2}" cy="${py + 13}" r="12"/>` +
-        `<rect class="ac-shape" x="${px}" y="${py + body - 2}" width="${w}" height="${h - body + 2}" rx="18"/>`
-      );
+  return `<rect class="ac-shape" x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" rx="8"/>`;
+}
+
+/**
+ * Icon 16×16 (nét 1.5px, không fill) theo loại component, kế thừa ký hiệu Structurizr:
+ * person → người, database → cylinder, queue → pipe, storage → bucket, gateway → hexagon,
+ * frontend → trình duyệt. Type tự định nghĩa dùng icon của `custom`.
+ */
+export function iconSvg(type: string): string {
+  return ICONS[type] ?? ICONS.custom!;
+}
+
+const ICONS: Record<string, string> = {
+  person: '<circle cx="8" cy="5" r="3"/><path d="M2.5 14.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>',
+  system:
+    '<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1"/>' +
+    '<rect x="1.5" y="9" width="5.5" height="5.5" rx="1"/><rect x="9" y="9" width="5.5" height="5.5" rx="1"/>',
+  external:
+    '<circle cx="8" cy="8" r="6.5"/><ellipse cx="8" cy="8" rx="2.75" ry="6.5"/><path d="M1.5 8h13"/>',
+  frontend:
+    '<rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M1.5 6h13"/>' +
+    '<circle cx="4" cy="4.25" r=".4"/><circle cx="5.75" cy="4.25" r=".4"/>',
+  gateway:
+    '<path d="M4.75 2h6.5L14.5 8l-3.25 6h-6.5L1.5 8z"/><path d="M6 8h4M8.5 6.5 10 8l-1.5 1.5"/>',
+  service:
+    '<path d="M8 1.5l6 3.25v6.5L8 14.5l-6-3.25v-6.5z"/><path d="M2 4.75 8 8l6-3.25M8 8v6.5"/>',
+  database:
+    '<ellipse cx="8" cy="3.5" rx="5.5" ry="2"/><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9"/>' +
+    '<path d="M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/>',
+  cache: '<path d="M9 1.5 3.5 9h4L7 14.5 12.5 7h-4z"/>',
+  queue: '<rect x="1.5" y="3.5" width="13" height="9" rx="2"/><path d="M5.5 3.5v9M9.5 3.5v9"/>',
+  storage:
+    '<ellipse cx="8" cy="3.5" rx="6" ry="2"/><path d="M2 3.5l1.5 9.5c.2 1 2.2 1.5 4.5 1.5s4.3-.5 4.5-1.5L14 3.5"/>',
+  custom: '<rect x="2" y="2" width="12" height="12" rx="2.5"/><path d="M5.5 8h5M8 5.5v5"/>',
+};
+
+const EDGE_CORNER = 6;
+
+/**
+ * Path của connector: polyline orthogonal, mỗi góc rẽ bo cung bậc hai bán kính 6px
+ * (không quá nửa đoạn ngắn hơn, để góc sát nhau không bị lẹm). Dùng chung cho SVG và canvas.
+ */
+export function edgePath(points: { x: number; y: number }[], radius = EDGE_CORNER): string {
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const pt = (p: { x: number; y: number }) => `${r2(p.x)},${r2(p.y)}`;
+  if (points.length < 3) return points.map((p, i) => `${i ? 'L' : 'M'}${pt(p)}`).join(' ');
+  let d = `M${pt(points[0]!)}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const [prev, cur, next] = [points[i - 1]!, points[i]!, points[i + 1]!];
+    const inLen = Math.hypot(cur.x - prev.x, cur.y - prev.y);
+    const outLen = Math.hypot(next.x - cur.x, next.y - cur.y);
+    const r = Math.min(radius, inLen / 2, outLen / 2);
+    if (r < 0.5) {
+      d += ` L${pt(cur)}`;
+      continue;
     }
-    case 'database':
-    case 'cache': {
-      const ry = 8;
-      return (
-        `<path class="ac-shape" d="M${px},${py + ry} v${h - 2 * ry} a${w / 2},${ry} 0 0 0 ${w},0 v${-(h - 2 * ry)} a${w / 2},${ry} 0 0 0 ${-w},0 z"/>` +
-        `<ellipse class="ac-shape" cx="${px + w / 2}" cy="${py + ry}" rx="${w / 2}" ry="${ry}"/>`
-      );
-    }
-    case 'queue':
-      return `<rect class="ac-shape" x="${px}" y="${py}" width="${w}" height="${h}" rx="${Math.min(24, h / 2)}"/>`;
-    case 'storage':
-      return `<polygon class="ac-shape" points="${px},${py} ${px + w},${py} ${px + w - 12},${py + h} ${px + 12},${py + h}"/>`;
-    case 'gateway':
-      return `<polygon class="ac-shape" points="${px + 12},${py} ${px + w - 12},${py} ${px + w},${py + h / 2} ${px + w - 12},${py + h} ${px + 12},${py + h} ${px},${py + h / 2}"/>`;
-    case 'frontend':
-      return (
-        `<rect class="ac-shape" x="${px}" y="${py}" width="${w}" height="${h}" rx="6"/>` +
-        `<line class="ac-deco" x1="${px}" y1="${py + 14}" x2="${px + w}" y2="${py + 14}"/>` +
-        [0, 1, 2]
-          .map((i) => `<circle class="ac-dot" cx="${px + 9 + i * 8}" cy="${py + 7}" r="2"/>`)
-          .join('')
-      );
-    case 'system':
-      return `<rect class="ac-shape" x="${px}" y="${py}" width="${w}" height="${h}" rx="4"/>`;
-    default:
-      return `<rect class="ac-shape" x="${px}" y="${py}" width="${w}" height="${h}" rx="8"/>`;
+    const a = {
+      x: cur.x - ((cur.x - prev.x) / inLen) * r,
+      y: cur.y - ((cur.y - prev.y) / inLen) * r,
+    };
+    const b = {
+      x: cur.x + ((next.x - cur.x) / outLen) * r,
+      y: cur.y + ((next.y - cur.y) / outLen) * r,
+    };
+    d += ` L${pt(a)} Q${pt(cur)} ${pt(b)}`;
   }
+  return `${d} L${pt(points[points.length - 1]!)}`;
 }
 
 function renderEdge(edge: EdgeRoute, markerId: string, sev: Severity | undefined): string {
   const rel = edge.relationship;
-  const d = edge.points.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ');
+  const d = edgePath(edge.points);
   const async = isAsyncRelationship(rel) ? ' ac-async' : '';
   const title = [`${rel.from} → ${rel.to}`, rel.label, rel.type && `[${rel.type}]`]
     .filter(Boolean)

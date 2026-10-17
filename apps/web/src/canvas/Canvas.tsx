@@ -42,6 +42,11 @@ import { suggestRelationshipType } from './suggest';
 const nodeTypes = { component: ComponentNode, group: GroupNode };
 const edgeTypes = { arch: EdgeView };
 const SNAP: [number, number] = [10, 10];
+/** Căn khung chừa lề trái cho palette (nổi ở góc trên trái canvas) để không che node. */
+const FIT_VIEW = {
+  padding: { top: '24px', right: '24px', bottom: '24px', left: '160px' },
+  maxZoom: 1,
+} as const;
 
 const cid = (id: string) => `c:${id}`;
 const gid = (id: string) => `g:${id}`;
@@ -263,8 +268,7 @@ function CanvasInner() {
     const key = `${docVersion}:${viewId}`;
     if (!canvas || fittedFor.current === key) return;
     fittedFor.current = key;
-    if (canvas.nodes.length)
-      requestAnimationFrame(() => void rf.fitView({ padding: 0.08, maxZoom: 1 }));
+    if (canvas.nodes.length) requestAnimationFrame(() => void rf.fitView(FIT_VIEW));
   }, [canvas, viewId, docVersion, rf]);
 
   // Tìm kiếm → căn giữa node.
@@ -596,6 +600,7 @@ function CanvasInner() {
           deleteKeyCode={null}
           snapToGrid
           snapGrid={SNAP}
+          fitViewOptions={FIT_VIEW}
           minZoom={0.1}
           maxZoom={4}
           elevateNodesOnSelect={false}

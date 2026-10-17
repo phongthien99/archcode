@@ -1,4 +1,4 @@
-import type { Point } from '@archcode/core/canvas';
+import { edgePath, type Point } from '@archcode/core/canvas';
 import { useReactFlow, type Edge, type EdgeProps } from '@xyflow/react';
 import { createContext, memo, useContext } from 'react';
 import type { CanvasEdge } from '../worker/api';
@@ -26,7 +26,7 @@ export const EdgeView = memo(function EdgeView({ data, selected }: EdgeProps<Arc
   const edge = data!.edge;
   const route = useRoute(edge.id);
   if (!route || route.points.length < 2) return null;
-  const d = route.points.map((p, i) => `${i ? 'L' : 'M'}${p.x},${p.y}`).join(' ');
+  const d = edgePath(route.points);
   const sev = edge.severity === 'error' || edge.severity === 'warning' ? edge.severity : undefined;
   const label = edge.label && route.label ? { ...edge.label, ...route.label } : undefined;
   return (
@@ -42,7 +42,8 @@ export const EdgeView = memo(function EdgeView({ data, selected }: EdgeProps<Arc
       <path
         d={d}
         className="react-flow__edge-interaction"
-        style={{ stroke: 'transparent', strokeWidth: 14, fill: 'none' }}
+        // dasharray: none — `.ac-edge>path` vẽ nét đứt; vùng click phải liền, không thì click rơi vào khe.
+        style={{ stroke: 'transparent', strokeWidth: 14, fill: 'none', strokeDasharray: 'none' }}
       />
       {selected && <WaypointHandles id={edge.id} points={route.points} />}
       {label && (

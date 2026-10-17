@@ -1,4 +1,4 @@
-import { layoutFileName, parseLayout } from '@archcode/core/canvas';
+import { isMindmapSource, layoutFileName, parseLayout } from '@archcode/core/canvas';
 import { del, get, set } from 'idb-keyval';
 import { isDirty, layoutText, useApp, type FsBinding } from '../store';
 import { download, readArchitectureFile } from './files';
@@ -34,10 +34,13 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', 'out', 'target', 've
 const MAX_DEPTH = 4;
 const MAX_FILES = 2000;
 
-/** File kiến trúc: `*.yaml`/`*.yml` (trừ file layout) có `version` và `system` ở cấp gốc. */
+/**
+ * File ArchCode: `*.yaml`/`*.yml` (trừ file layout) có `version` ở cấp gốc, kèm `system`
+ * (kiến trúc) hoặc `kind: mindmap`.
+ */
 export function looksLikeArchitecture(name: string, text: string): boolean {
   if (!/\.ya?ml$/i.test(name) || /\.layout\.ya?ml$/i.test(name)) return false;
-  return /^version\s*:/m.test(text) && /^system\s*:/m.test(text);
+  return /^version\s*:/m.test(text) && (/^system\s*:/m.test(text) || isMindmapSource(text));
 }
 
 export async function listArchitectureFiles(

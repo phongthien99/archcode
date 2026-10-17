@@ -1,8 +1,11 @@
 import { get, set } from 'idb-keyval';
-import { layoutText, useApp, type Theme } from '../store';
+import { accents, diagramPalettes } from '@archcode/core/tokens';
+import { layoutText, useApp, type AccentName, type DiagramPaletteName, type Theme } from '../store';
 
 const DOC_KEY = 'archcode:document';
 const THEME_KEY = 'archcode:theme';
+const ACCENT_KEY = 'archcode:accent';
+const DIAGRAM_KEY = 'archcode:diagram-palette';
 
 interface SavedDocument {
   text: string;
@@ -25,11 +28,24 @@ export function restoreTheme(): Theme {
   return theme === 'light' || theme === 'dark' ? theme : 'system';
 }
 
+export function restoreAccent(): AccentName | null {
+  const accent = localStorage.getItem(ACCENT_KEY);
+  return accent && accent in accents ? (accent as AccentName) : null;
+}
+
+export function restoreDiagramPalette(): DiagramPaletteName | null {
+  const name = localStorage.getItem(DIAGRAM_KEY);
+  return name && name in diagramPalettes ? (name as DiagramPaletteName) : null;
+}
+
 /** Autosave nội dung + layout vào IndexedDB (debounce 500ms) và theme vào localStorage. */
 export function startAutosave(): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return useApp.subscribe((state, prev) => {
     if (state.theme !== prev.theme) localStorage.setItem(THEME_KEY, state.theme);
+    if (state.accent !== prev.accent) localStorage.setItem(ACCENT_KEY, state.accent);
+    if (state.diagramPalette !== prev.diagramPalette)
+      localStorage.setItem(DIAGRAM_KEY, state.diagramPalette);
     if (
       state.text === prev.text &&
       state.fileName === prev.fileName &&

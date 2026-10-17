@@ -23,6 +23,7 @@ export {
   type LayoutFile,
   type ViewLayout,
 } from './layout/file';
-export { nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
+export { edgePath, iconSvg, nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
 export { elementAt, type ElementRange } from './parser/ranges';
+export { isMindmapSource } from './mindmap/detect';
 export { COMPONENT_TYPES, RELATIONSHIP_TYPES, ID_PATTERN, isAsyncRelationship } from './constants';

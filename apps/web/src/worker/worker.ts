@@ -6,17 +6,23 @@ import {
   extractEmbeddedSource,
   generateHtml,
   isAsyncRelationship,
+  isMindmapSource,
+  layoutMindmap,
   layoutView,
   nodeBodySvg,
   nodeClass,
   nodeTooltip,
   parseLayout,
+  renderMindmapSvg,
   renderSvg,
   resolveView,
   validate,
+  validateMindmap,
   viewLayout,
   type Diagnostic,
   type Layout,
+  type MindmapValidationResult,
+  type MindNode,
   type Severity,
   type ValidationResult,
 } from '@archcode/core';
@@ -38,6 +44,27 @@ let cache: { text: string; result: ValidationResult; ranges?: AnalyzeResult['ran
 function validated(text: string) {
   if (cache?.text !== text) cache = { text, result: validate(text) };
   return cache;
+}
+
+let mindCache: { text: string; result: MindmapValidationResult } | undefined;
+function validatedMindmap(text: string) {
+  if (mindCache?.text !== text) mindCache = { text, result: validateMindmap(text) };
+  return mindCache.result;
+}
+
+/** Mind map chỉ có chế độ Xem trước: layout tính từ cấu trúc cây, không có vị trí ghim. */
+function mindmapSvg(text: string, standalone: boolean): string | null {
+  const { model, diagnostics } = validatedMindmap(text);
+  if (!model) return null;
+  return renderMindmapSvg(layoutMindmap(model), {
+    diagnostics,
+    standalone,
+    idPrefix: 'app-',
+  });
+}
+
+function countNodes(node: MindNode): number {
+  return node.children.reduce((n, child) => n + countNodes(child), 1);
 }
 
 function severityIndex(diagnostics: Diagnostic[]): Map<string, Severity> {
@@ -110,6 +137,21 @@ async function layoutFor(
 const api: CoreWorkerApi = {
   async analyze(req: AnalyzeRequest): Promise<AnalyzeResult> {
     const start = performance.now();
+    if (isMindmapSource(req.text)) {
+      const { model, diagnostics } = validatedMindmap(req.text);
+      return {
+        kind: 'mindmap',
+        model: null,
+        mindmap: model,
+        diagnostics,
+        view: model
+          ? { id: 'mindmap', nodeCount: countNodes(model.root), svg: mindmapSvg(req.text, false)! }
+          : null,
+        ranges: [],
+        membership: {},
+        durationMs: Math.round(performance.now() - start),
+      };
+    }
     const entry = validated(req.text);
     const { model, diagnostics } = entry.result;
     entry.ranges ??= elementRanges(req.text);
@@ -138,7 +180,9 @@ const api: CoreWorkerApi = {
       }
     }
     return {
+      kind: 'architecture',
       model,
+      mindmap: null,
       diagnostics,
       view,
       ranges: entry.ranges,
@@ -148,9 +192,13 @@ const api: CoreWorkerApi = {
   },
   applyCommand,
   async exportHtml(text, options) {
+    if (isMindmapSource(text)) {
+      throw new Error('Chưa hỗ trợ xuất HTML cho mind map — dùng SVG hoặc PNG');
+    }
     return (await generateHtml(text, options)).html;
   },
   async standaloneSvg(text, viewId, layoutText) {
+    if (isMindmapSource(text)) return mindmapSvg(text, true);
     const layout = layoutText ? parseLayout(layoutText).layout : undefined;
     const { model } = validated(text).result;
     const id = viewId ?? model?.views[0]?.id ?? '';

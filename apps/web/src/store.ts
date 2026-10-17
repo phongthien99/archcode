@@ -1,5 +1,12 @@
+import {
+  DEFAULT_ACCENT,
+  DEFAULT_DIAGRAM_PALETTE,
+  type AccentName,
+  type DiagramPaletteName,
+} from '@archcode/core/tokens';
 import type {
   ArchitectureModel,
+  MindmapModel,
   Command,
   Diagnostic,
   DiagnosticTarget,
@@ -18,10 +25,11 @@ import {
   type Point,
 } from '@archcode/core/canvas';
 import { create } from 'zustand';
-import type { CanvasData, ViewPositions } from './worker/api';
+import type { CanvasData, DocumentKind, ViewPositions } from './worker/api';
 import { core, createAnalyzer } from './worker/client';
 
 export type Theme = 'system' | 'light' | 'dark';
+export type { AccentName, DiagramPaletteName };
 export type Mode = 'canvas' | 'preview';
 
 export interface RevealRequest {
@@ -78,7 +86,11 @@ export interface AppState {
   /** Vị trí giữ tạm trong phiên làm việc theo view — canvas không "nhảy" khi model đổi. */
   sticky: Record<string, Record<string, Point>>;
 
+  /** Loại tài liệu của lần phân tích gần nhất (theo `kind` trong YAML). */
+  kind: DocumentKind;
   model: ArchitectureModel | null;
+  /** Model khi tài liệu là mind map (`model` khi đó là null). */
+  mindmap: MindmapModel | null;
   diagnostics: Diagnostic[];
   svg: string | null;
   canvas: CanvasData | null;
@@ -101,6 +113,8 @@ export interface AppState {
   focus: { id: string; nonce: number } | null;
   edit: ExternalEdit | null;
   theme: Theme;
+  accent: AccentName;
+  diagramPalette: DiagramPaletteName;
   canUndo: boolean;
   canRedo: boolean;
   /** Mốc "đã lưu" để biết còn thay đổi chưa lưu. */
@@ -150,6 +164,8 @@ export interface AppState {
   notify(message: string, kind?: Notice['kind']): void;
   setSearchOpen(open: boolean): void;
   setTheme(theme: Theme): void;
+  setAccent(accent: AccentName): void;
+  setDiagramPalette(diagramPalette: DiagramPaletteName): void;
 }
 
 const DEBOUNCE_MS = 250;
@@ -193,10 +209,13 @@ export function diffText(a: string, b: string) {
 export const useApp = create<AppState>()((set, get) => {
   const analyzer = createAnalyzer(
     (result) => {
-      if (!result.model) {
-        // Giữ diagram và model hợp lệ gần nhất; chỉ cập nhật diagnostics.
-        const hasDiagram = get().svg !== null || get().canvas !== null;
+      if (!result.model && !result.mindmap) {
+        // Giữ diagram và model hợp lệ gần nhất (nếu cùng loại tài liệu); chỉ cập nhật diagnostics.
+        const sameKind = get().kind === result.kind;
+        const hasDiagram = sameKind && (get().svg !== null || get().canvas !== null);
         set({
+          kind: result.kind,
+          ...(sameKind ? {} : { model: null, mindmap: null, svg: null, canvas: null }),
           diagnostics: result.diagnostics,
           stale: hasDiagram,
           durationMs: result.durationMs,
@@ -212,7 +231,9 @@ export const useApp = create<AppState>()((set, get) => {
         );
       }
       set({
+        kind: result.kind,
         model: result.model,
+        mindmap: result.mindmap,
         diagnostics: result.diagnostics,
         svg: view?.svg ?? null,
         canvas: view?.canvas ?? null,
@@ -302,7 +323,9 @@ export const useApp = create<AppState>()((set, get) => {
     docVersion: 0,
     layout: emptyLayout(),
     sticky: {},
+    kind: 'architecture',
     model: null,
+    mindmap: null,
     diagnostics: [],
     svg: null,
     canvas: null,
@@ -321,6 +344,8 @@ export const useApp = create<AppState>()((set, get) => {
     focus: null,
     edit: null,
     theme: 'system',
+    accent: DEFAULT_ACCENT,
+    diagramPalette: DEFAULT_DIAGRAM_PALETTE,
     canUndo: false,
     canRedo: false,
     saved: { text: '', layout: '' },
@@ -352,6 +377,7 @@ export const useApp = create<AppState>()((set, get) => {
         svg: null,
         canvas: null,
         model: null,
+        mindmap: null,
         saved: { text, layout: isLayoutEmpty(layout) ? '' : serializeLayout(layout) },
       });
       resetHistory();
@@ -535,6 +561,12 @@ export const useApp = create<AppState>()((set, get) => {
     },
     setTheme(theme) {
       set({ theme });
+    },
+    setAccent(accent) {
+      set({ accent });
+    },
+    setDiagramPalette(diagramPalette) {
+      set({ diagramPalette });
     },
   };
 });

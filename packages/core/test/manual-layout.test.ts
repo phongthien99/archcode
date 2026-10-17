@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkLayout,
+  GROUP_PADDING,
   generateHtml,
   layoutView,
   parseLayout,
@@ -100,8 +101,8 @@ describe('layout thủ công (S5-LAYOUT-02)', () => {
     expect(data.x).toBeGreaterThan(core.x);
     expect(data.y + data.height).toBeLessThan(core.y + core.height);
     const storage = layout.nodes.find((n) => n.component.id === 'object-storage')!;
-    expect(storage.x - data.x).toBe(20);
-    expect(storage.y - data.y).toBe(40);
+    expect(storage.x - data.x).toBe(GROUP_PADDING.side);
+    expect(storage.y - data.y).toBe(GROUP_PADDING.top);
   });
 
   it('SVG dùng viewBox theo vùng vẽ', async () => {

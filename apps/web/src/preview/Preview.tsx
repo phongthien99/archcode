@@ -1,4 +1,4 @@
-import type { ArchitectureModel, DiagnosticTarget } from '@archcode/core';
+import type { ArchitectureModel, DiagnosticTarget, MindNode } from '@archcode/core';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useApp } from '../store';
 
@@ -19,6 +19,9 @@ export function Preview() {
   const stale = useApp((s) => s.stale);
   const nodeCount = useApp((s) => s.nodeCount);
   const selection = useApp((s) => s.selection);
+  const isMindmap = useApp((s) => s.kind === 'mindmap');
+  // Node mind map đang chọn — chưa đưa vào `selection` chung vì DiagnosticTarget chỉ có phần tử kiến trúc.
+  const [mindSelection, setMindSelection] = useState<string | null>(null);
   const container = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const [t, setT] = useState<Transform>({ x: 0, y: 0, k: 1 });
@@ -55,11 +58,17 @@ export function Preview() {
     const root = content.current;
     if (!root) return;
     root.querySelectorAll('.ac-selected').forEach((el) => el.classList.remove('ac-selected'));
-    if (selection) {
+    if (isMindmap) {
+      if (mindSelection) {
+        root
+          .querySelector(`.ac-mm-node[data-id="${CSS.escape(mindSelection)}"]`)
+          ?.classList.add('ac-selected');
+      }
+    } else if (selection) {
       const selector = `.ac-node[data-kind="${selection.kind}"][data-id="${CSS.escape(selection.id)}"], .ac-edge[data-kind="${selection.kind}"][data-id="${CSS.escape(selection.id)}"]`;
       root.querySelector(selector)?.classList.add('ac-selected');
     }
-  }, [selection, svg]);
+  }, [selection, mindSelection, isMindmap, svg]);
 
   // Wheel phải non-passive để chặn cuộn trang.
   useEffect(() => {
@@ -94,7 +103,16 @@ export function Preview() {
     if (d?.moved) return;
     const el = (e.target as Element).closest('[data-kind][data-id]');
     if (!el) {
+      setMindSelection(null);
       useApp.getState().select(null);
+      return;
+    }
+    if (el.getAttribute('data-kind') === 'mind-node') {
+      const id = el.getAttribute('data-id')!;
+      setMindSelection(id);
+      const { mindmap, revealLine } = useApp.getState();
+      const source = mindmap && findMindNode(mindmap.root, id)?.source;
+      if (source) revealLine(source.line, source.column);
       return;
     }
     const target = {
@@ -128,7 +146,7 @@ export function Preview() {
           YAML đang lỗi cú pháp — đang hiển thị bản hợp lệ gần nhất
         </div>
       )}
-      {nodeCount > LARGE_VIEW && (
+      {!isMindmap && nodeCount > LARGE_VIEW && (
         <div className="banner info" role="status">
           View có {nodeCount} component — nên tách thành nhiều view nhỏ để dễ đọc
         </div>
@@ -168,6 +186,15 @@ function zoomAt(t: Transform, factor: number, cx: number, cy: number): Transform
   const k = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.k * factor));
   const ratio = k / t.k;
   return { k, x: cx - (cx - t.x) * ratio, y: cy - (cy - t.y) * ratio };
+}
+
+function findMindNode(node: MindNode, id: string): MindNode | undefined {
+  if (node.id === id) return node;
+  for (const child of node.children) {
+    const found = findMindNode(child, id);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 function sourceOf(model: ArchitectureModel | null, target: DiagnosticTarget) {

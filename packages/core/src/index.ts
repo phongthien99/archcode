@@ -28,7 +28,14 @@ export {
   type Point,
 } from './layout/elk';
 export { renderSvg, type RenderOptions } from './render/svg';
-export { diagramCss, darkThemeVariables, TYPE_COLORS } from './render/theme';
+export {
+  diagramCss,
+  darkThemeVariables,
+  diagramPaletteVariants,
+  diagramThemeVariables,
+  TYPE_COLORS,
+} from './render/theme';
+export * as tokens from './tokens';
 export { escapeXml } from './render/text';
 export {
   generateHtml,
@@ -56,7 +63,7 @@ export {
 } from './layout/file';
 export { routeEdges, type Box, type RouteRequest, type RouteResult } from './layout/route';
 export { computeGroupBoxes, placeNodes, GROUP_PADDING } from './layout/manual';
-export { shapeSvg, nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
+export { shapeSvg, iconSvg, edgePath, nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
 export {
   nodeContent,
   edgeLabelContent,
@@ -65,3 +72,4 @@ export {
 } from './render/nodeContent';
 export { ASYNC_RELATIONSHIP_TYPES, isAsyncRelationship } from './constants';
 export { elementRanges, elementAt, type ElementRange } from './parser/ranges';
+export * from './mindmap';

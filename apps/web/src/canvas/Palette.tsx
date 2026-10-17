@@ -1,4 +1,4 @@
-import { COMPONENT_TYPES } from '@archcode/core/canvas';
+import { COMPONENT_TYPES, iconSvg } from '@archcode/core/canvas';
 
 export const PALETTE_MIME = 'application/x-archcode-type';
 
@@ -31,8 +31,9 @@ export function Palette({ disabled }: { disabled: boolean }) {
             e.dataTransfer.effectAllowed = 'copy';
           }}
         >
-          <svg className={`ac-t-${type}`} width="18" height="14" aria-hidden>
-            <rect className="ac-shape" x="1" y="1" width="16" height="12" rx="3" />
+          {/* Cùng icon với header của node trên diagram. */}
+          <svg className={`ac-t-${type}`} width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+            <g className="ac-icon" dangerouslySetInnerHTML={{ __html: iconSvg(type) }} />
           </svg>
           {LABEL[type]}
         </div>

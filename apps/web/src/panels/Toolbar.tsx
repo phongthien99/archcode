@@ -13,8 +13,9 @@ import {
   type ArchitectureEntry,
   type RecentFolder,
 } from '../files/fs';
-import { currentLayoutName, isDirty, layoutText, useApp, type Theme } from '../store';
+import { currentLayoutName, isDirty, layoutText, useApp } from '../store';
 import { BLANK_TEMPLATE, TEMPLATES } from '../templates';
+import { AppearanceMenu } from './Appearance';
 import { core } from '../worker/client';
 
 const FOLDER_UNSUPPORTED =
@@ -25,8 +26,8 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
   const fileName = useApp((s) => s.fileName);
   const fs = useApp((s) => s.fs);
   const model = useApp((s) => s.model);
+  const isMindmap = useApp((s) => s.kind === 'mindmap');
   const viewId = useApp((s) => s.viewId);
-  const theme = useApp((s) => s.theme);
   const analyzing = useApp((s) => s.analyzing);
   const durationMs = useApp((s) => s.durationMs);
   const canUndo = useApp((s) => s.canUndo);
@@ -217,11 +218,18 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
         type="button"
         className="primary"
         onClick={run(() => exportHtml(false))}
+        disabled={isMindmap}
+        title={isMindmap ? 'Mind map chưa hỗ trợ xuất HTML — dùng SVG hoặc PNG' : undefined}
         data-testid="export-html"
       >
         Xuất HTML
       </button>
-      <button type="button" onClick={run(() => exportHtml(true))} title="Mở bản HTML trong tab mới">
+      <button
+        type="button"
+        onClick={run(() => exportHtml(true))}
+        disabled={isMindmap}
+        title="Mở bản HTML trong tab mới"
+      >
         Xem
       </button>
       <button type="button" onClick={run(() => exportImage('svg'))}>
@@ -251,6 +259,7 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
       <button
         type="button"
         onClick={() => useApp.getState().setSearchOpen(true)}
+        disabled={isMindmap}
         title="Tìm component/group (Ctrl+K)"
       >
         Tìm
@@ -263,15 +272,7 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
       <span className="status" aria-live="polite">
         {analyzing ? 'Đang phân tích…' : `${durationMs} ms`}
       </span>
-      <select
-        aria-label="Giao diện"
-        value={theme}
-        onChange={(e) => useApp.getState().setTheme(e.target.value as Theme)}
-      >
-        <option value="system">Theo hệ thống</option>
-        <option value="light">Sáng</option>
-        <option value="dark">Tối</option>
-      </select>
+      <AppearanceMenu />
 
       {entries && (
         <div className="modal-backdrop" onMouseDown={() => setEntries(null)}>

@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./constants": "./src/constants.ts",
     "./theme": "./src/render/theme.ts",
+    "./tokens": "./src/tokens.ts",
     "./schema.json": "./src/schema/architecture.schema.json",
     "./canvas": "./src/canvas.ts"
   },
@@ -18,7 +19,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "pnpm run clean && pnpm run build:js && pnpm run build:types && pnpm run build:schema && pnpm run build:license && pnpm run build:package",
-    "build:js": "esbuild src/index.ts src/constants.ts src/render/theme.ts src/canvas.ts --bundle --platform=neutral --format=esm --target=es2022 --packages=external --outdir=dist --outbase=src",
+    "build:js": "esbuild src/index.ts src/constants.ts src/render/theme.ts src/tokens.ts src/canvas.ts --bundle --platform=neutral --format=esm --target=es2022 --packages=external --outdir=dist --outbase=src",
     "build:types": "tsc -p tsconfig.build.json",
     "build:schema": "mkdir -p dist/schema && cp src/schema/architecture.schema.json dist/schema/architecture.schema.json",
     "build:license": "cp ../../LICENSE dist/LICENSE",

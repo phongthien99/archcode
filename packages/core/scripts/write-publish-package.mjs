@@ -23,6 +23,10 @@ const publishPackage = {
       types: './render/theme.d.ts',
       import: './render/theme.js',
     },
+    './tokens': {
+      types: './tokens.d.ts',
+      import: './tokens.js',
+    },
     './schema.json': './schema/architecture.schema.json',
     './canvas': {
       types: './canvas.d.ts',

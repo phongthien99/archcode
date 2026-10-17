@@ -24,14 +24,19 @@ describe('renderSvg', () => {
     expect(svg).not.toContain('" onmouseover="');
   });
 
-  it('shape theo type', async () => {
+  it('node là card thống nhất: khung bo góc, icon theo type, footer type · technology', async () => {
     const svg = await svgOf(fixture('document-platform.yaml'));
-    expect(svg).toMatch(
-      /class="ac-node ac-t-database"[^>]*><title>[^<]*<\/title><path class="ac-shape"/,
-    );
-    expect(svg).toMatch(/class="ac-node ac-t-gateway"[^>]*><title>[^<]*<\/title><polygon/);
-    expect(svg).toMatch(/class="ac-node ac-t-person"[^>]*><title>[^<]*<\/title><circle/);
-    expect(svg).toContain('ac-t-external');
+    for (const type of ['database', 'gateway', 'person', 'queue', 'external']) {
+      expect(svg, type).toMatch(
+        new RegExp(
+          `class="ac-node ac-t-${type}"[^>]*><title>[^<]*</title><rect class="ac-shape"[^>]*rx="8"/><g class="ac-icon"`,
+        ),
+      );
+    }
+    // Icon khác nhau theo type (database: cylinder có ellipse; gateway: hexagon).
+    expect(svg).toMatch(/ac-t-database"[\s\S]*?<g class="ac-icon"[^>]*><ellipse/);
+    expect(svg).toMatch(/<line class="ac-divider"/);
+    expect(svg).toMatch(/<text class="ac-meta"[^>]*>database · PostgreSQL/);
   });
 
   it('type tự định nghĩa dùng màu mặc định', async () => {

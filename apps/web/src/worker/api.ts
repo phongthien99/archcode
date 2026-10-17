@@ -4,6 +4,7 @@ import type {
   Diagnostic,
   ElementRange,
   EmbeddedSource,
+  MindmapModel,
   MutationResult,
   Point,
   Severity,
@@ -73,9 +74,15 @@ export interface AnalyzeRequest {
   positions: Record<string, ViewPositions>;
 }
 
+/** Loại tài liệu, chọn theo `kind` ở cấp gốc của YAML. */
+export type DocumentKind = 'architecture' | 'mindmap';
+
 export interface AnalyzeResult {
-  /** null khi YAML lỗi cú pháp/gốc không phải object. */
+  kind: DocumentKind;
+  /** null khi YAML lỗi cú pháp/gốc không phải object, hoặc tài liệu là mind map. */
   model: ArchitectureModel | null;
+  /** Chỉ với `kind: mindmap`; null khi YAML lỗi cú pháp hoặc thiếu `root`. */
+  mindmap: MindmapModel | null;
   diagnostics: Diagnostic[];
   view: ViewRender | null;
   /** Đoạn text của từng phần tử (đồng bộ con trỏ YAML → chọn trên canvas). */

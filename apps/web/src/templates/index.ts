@@ -1,6 +1,7 @@
 import documentPlatform from '../../../../fixtures/document-platform.yaml?raw';
 import ecommerce from './ecommerce-microservices.yaml?raw';
 import eventDriven from './event-driven.yaml?raw';
+import mindmapLaunch from '../../../../fixtures/mindmap-launch.yaml?raw';
 
 export interface Template {
   id: string;
@@ -31,6 +32,13 @@ export const TEMPLATES: Template[] = [
     description: 'MQTT → Kafka → các consumer độc lập',
     fileName: 'iot-telemetry.yaml',
     text: eventDriven,
+  },
+  {
+    id: 'mindmap',
+    name: 'Mind map: kế hoạch ra mắt',
+    description: 'Sơ đồ tư duy (kind: mindmap): nhánh hai phía, màu, thu gọn, link chéo',
+    fileName: 'launch-plan.yaml',
+    text: mindmapLaunch,
   },
 ];
 

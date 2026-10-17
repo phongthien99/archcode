@@ -83,7 +83,7 @@ describe('layoutView', () => {
     expect(lr.direction).toBe('LR');
   });
 
-  it('kích thước node theo nội dung: tên dài → node rộng hơn, tối đa 240', async () => {
+  it('node là card 220–260px: tên dài xuống dòng, cao hơn chứ không nở ngang', async () => {
     const m = validate(
       yaml(`components:
   - { id: a, type: service, name: A }
@@ -92,9 +92,10 @@ describe('layoutView', () => {
     ).model!;
     const { nodes } = await layoutView(resolveView(m, m.views[0]!));
     const [a, b] = nodes;
-    expect(a!.width).toBe(160);
-    expect(b!.width).toBeGreaterThan(200);
-    expect(b!.width).toBeLessThanOrEqual(240);
+    expect(a!.width).toBe(220);
+    expect(a!.height).toBeGreaterThanOrEqual(64);
+    expect(b!.width).toBeGreaterThan(220);
+    expect(b!.width).toBeLessThanOrEqual(260);
     expect(b!.height).toBeGreaterThan(a!.height);
   });
 

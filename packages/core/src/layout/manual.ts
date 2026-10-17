@@ -4,7 +4,8 @@ import type { ResolvedView } from '../views/resolve';
 import { routeEdges, type Box, type Point } from './route';
 
 /** Khoảng đệm của group quanh phần tử con — giống `elk.padding` của group trong auto-layout. */
-export const GROUP_PADDING = { top: 40, side: 20, bottom: 20 } as const;
+/** Padding group (spec: 24–32px); `top` gồm cả dòng tiêu đề 14px. */
+export const GROUP_PADDING = { top: 44, side: 24, bottom: 24 } as const;
 /** Lề quanh toàn bộ diagram — giống `elk.padding` của root. */
 const MARGIN = 24;
 /** Khoảng cách tối thiểu giữa hai node khi tự đặt node mới. */

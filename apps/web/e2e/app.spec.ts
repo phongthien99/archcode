@@ -157,6 +157,22 @@ test('autocomplete: gợi ý component type', async ({ preview: page }) => {
 });
 
 test('đổi theme', async ({ preview: page }) => {
-  await page.getByLabel('Giao diện').selectOption('dark');
+  await page.getByRole('button', { name: 'Giao diện' }).click();
+  await page.getByRole('radio', { name: 'Tối' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});
+
+test('đổi màu nhấn và bảng màu diagram', async ({ preview: page }) => {
+  await page.getByRole('button', { name: 'Giao diện' }).click();
+  await page.getByRole('radio', { name: 'Tím' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'violet');
+  await page.getByRole('radio', { name: 'C4 (Structurizr)' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-diagram', 'c4');
+  const fill = await page
+    .locator('.ac-t-service > .ac-shape')
+    .first()
+    .evaluate((el) => getComputedStyle(el).fill);
+  expect(fill).toBe('rgb(52, 120, 193)'); // container C4 #3478c1
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Giao diện' })).toBeHidden();
 });

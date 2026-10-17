@@ -1,4 +1,5 @@
 import { layoutView, renderSvg, resolveView, validate, type Diagnostic } from '@archcode/core';
+import { font, palette } from '@archcode/core/tokens';
 import { installElkShim } from './worker/elk-shim';
 
 const ROOT_SELECTOR = '.archcode-viewer,[data-archcode-viewer]';
@@ -167,7 +168,7 @@ function installStyle(): void {
 .archcode-loading,
 .archcode-error {
   margin: 0;
-  font: 0.9rem/1.45 system-ui, sans-serif;
+  font: 0.9rem/1.45 ${font.sans};
 }
 .archcode-diagnostics {
   display: grid;
@@ -175,10 +176,10 @@ function installStyle(): void {
 }
 .archcode-diagnostic-error,
 .archcode-error {
-  color: #b42318;
+  color: ${palette.red[700]};
 }
 .archcode-diagnostic-warning {
-  color: #a15c07;
+  color: ${palette.amber[700]};
 }
 `;
   document.head.appendChild(style);

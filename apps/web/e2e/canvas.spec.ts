@@ -34,7 +34,8 @@ test.describe('Sprint 4 — canvas', () => {
     await expect(canvasNodes(page)).toHaveCount(1);
     await dropFromPalette(page, 'frontend', 200, 320);
     await dropFromPalette(page, 'service', 480, 320);
-    await dropFromPalette(page, 'database', 480, 500);
+    // Card rộng 220px: giữ database trên minimap (góc dưới phải) để thả connector không bị che.
+    await dropFromPalette(page, 'database', 480, 450);
     await expect(canvasNodes(page)).toHaveCount(4);
     // Node xuất hiện tại vị trí thả, không chồng nhau.
     const boxes = await Promise.all(

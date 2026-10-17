@@ -1,0 +1,48 @@
+version: 1
+kind: mindmap
+
+root:
+  id: launch
+  text: Ra mắt Document Platform v2
+  children:
+    - id: marketing
+      text: Marketing
+      children:
+        - Blog post
+        - text: Social media
+          tags: [todo]
+        - Webinar demo
+
+    - id: tech
+      text: Kỹ thuật
+      color: violet
+      children:
+        - id: load-test
+          text: Load test 10k RPS
+        - id: migration
+          text: Migration DB
+          link: document-db
+          note: Chạy trong maintenance window cuối tuần
+        - text: Feature flag
+          collapsed: true
+          children:
+            - Search v2
+            - Upload song song
+
+    - id: support
+      text: Hỗ trợ khách hàng
+      children:
+        - Cập nhật tài liệu
+        - Đào tạo team CS
+
+    - id: risk
+      text: Rủi ro
+      side: left
+      children:
+        - Downtime khi migrate
+        - Chi phí hạ tầng tăng
+
+links:
+  - from: risk
+    to: migration
+    label: giảm thiểu

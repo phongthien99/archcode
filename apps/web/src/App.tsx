@@ -1,4 +1,3 @@
-import { darkThemeVariables, diagramCss } from '@archcode/core/theme';
 import { useEffect, useRef, useState } from 'react';
 import { YamlEditor } from './editor/YamlEditor';
 import { checkExternalChanges, readPickedFiles, save } from './files/fs';
@@ -8,13 +7,10 @@ import { Toolbar } from './panels/Toolbar';
 import { Workspace } from './panels/Workspace';
 import { useApp } from './store';
 
-// Diagram dùng CSS variables: khai báo một lần, đổi theme không cần render lại SVG.
-const DIAGRAM_STYLE = `${diagramCss()}
-[data-theme=dark]{${darkThemeVariables()}}
-@media (prefers-color-scheme:dark){[data-theme=system]{${darkThemeVariables()}}}`;
-
 export function App() {
   const theme = useApp((s) => s.theme);
+  const accent = useApp((s) => s.accent);
+  const diagramPalette = useApp((s) => s.diagramPalette);
   const notice = useApp((s) => s.notice);
   const [split, setSplit] = useState(34);
   const [dragging, setDragging] = useState(false);
@@ -26,6 +22,14 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.accent = accent;
+  }, [accent]);
+
+  useEffect(() => {
+    document.documentElement.dataset.diagram = diagramPalette;
+  }, [diagramPalette]);
 
   useEffect(() => {
     if (notice) setToast({ kind: notice.kind, message: notice.message });
@@ -50,7 +54,7 @@ export function App() {
       if (key === 's') {
         e.preventDefault();
         save().catch((err: Error) => setError(err.message));
-      } else if (key === 'k') {
+      } else if (key === 'k' && state.kind !== 'mindmap') {
         e.preventDefault();
         state.setSearchOpen(true);
       } else if (nativeField) {
@@ -132,7 +136,6 @@ export function App() {
       }}
       onDrop={onDrop}
     >
-      <style>{DIAGRAM_STYLE}</style>
       <Toolbar onError={setError} />
       <div className="main" ref={main} style={{ gridTemplateColumns: `${split}% 6px 1fr` }}>
         <YamlEditor />

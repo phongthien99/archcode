@@ -8,7 +8,7 @@ import {
 } from '../render/nodeContent';
 import type { Component, Group, LayoutDirection, Relationship } from '../types';
 import type { ResolvedView } from '../views/resolve';
-import { manualLayout } from './manual';
+import { GROUP_PADDING, manualLayout } from './manual';
 import type { Point } from './route';
 
 export type { Point };
@@ -100,7 +100,7 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
       'elk.spacing.edgeNode': '20',
       'elk.spacing.edgeEdge': '12',
       'elk.spacing.edgeLabel': '4',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
       'elk.layered.spacing.edgeNodeBetweenLayers': '24',
       'elk.padding': '[top=24,left=24,bottom=24,right=24]',
     },
@@ -111,7 +111,9 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
   for (const group of uniqueById(view.groups)) {
     elkNodes.set(gid(group.id), {
       id: gid(group.id),
-      layoutOptions: { 'elk.padding': '[top=40,left=20,bottom=20,right=20]' },
+      layoutOptions: {
+        'elk.padding': `[top=${GROUP_PADDING.top},left=${GROUP_PADDING.side},bottom=${GROUP_PADDING.bottom},right=${GROUP_PADDING.side}]`,
+      },
       children: [],
     });
   }

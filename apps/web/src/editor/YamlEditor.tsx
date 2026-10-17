@@ -4,13 +4,14 @@ import {
   closeBrackets,
   closeBracketsKeymap,
   completionKeymap,
+  type CompletionContext,
 } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { yaml, yamlLanguage } from '@codemirror/lang-yaml';
 import {
   bracketMatching,
-  defaultHighlightStyle,
   foldGutter,
+  HighlightStyle,
   foldKeymap,
   indentOnInput,
   syntaxHighlighting,
@@ -30,31 +31,51 @@ import {
   lineNumbers,
   rectangularSelection,
 } from '@codemirror/view';
+import { tags as t } from '@lezer/highlight';
 import { useEffect, useRef } from 'react';
 import { useApp } from '../store';
 import { yamlCompletion } from './completion';
+
+const architectureCompletion = yamlCompletion(() => useApp.getState().model);
 import { toCmDiagnostics } from './lint';
 
 const theme = EditorView.theme({
-  '&': { height: '100%', fontSize: '13px', backgroundColor: 'var(--panel)', color: 'var(--fg)' },
-  '.cm-scroller': { fontFamily: 'var(--mono)', lineHeight: '1.6' },
-  '.cm-gutters': {
-    backgroundColor: 'var(--panel)',
-    color: 'var(--muted)',
-    borderRight: '1px solid var(--line)',
+  '&': {
+    height: '100%',
+    fontSize: 'var(--ac-font-size-md)',
+    backgroundColor: 'var(--ac-color-surface)',
+    color: 'var(--ac-color-text)',
   },
-  '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'var(--hover)' },
-  '.cm-cursor': { borderLeftColor: 'var(--fg)' },
+  '.cm-scroller': { fontFamily: 'var(--ac-font-mono)', lineHeight: '1.6' },
+  '.cm-gutters': {
+    backgroundColor: 'var(--ac-color-surface)',
+    color: 'var(--ac-color-text-muted)',
+    borderRight: '1px solid var(--ac-color-border)',
+  },
+  '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'var(--ac-color-surface-hover)' },
+  '.cm-cursor': { borderLeftColor: 'var(--ac-color-text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
-    backgroundColor: 'var(--selection) !important',
+    backgroundColor: 'var(--ac-color-accent-subtle) !important',
   },
   '.cm-tooltip': {
-    backgroundColor: 'var(--panel)',
-    color: 'var(--fg)',
-    border: '1px solid var(--line)',
+    backgroundColor: 'var(--ac-color-surface)',
+    color: 'var(--ac-color-text)',
+    border: '1px solid var(--ac-color-border)',
+    borderRadius: 'var(--ac-radius-md)',
+    boxShadow: 'var(--ac-color-shadow-md)',
   },
   '.cm-tooltip-lint': { whiteSpace: 'pre-line' },
 });
+
+// Màu cú pháp qua CSS variables để theo theme sáng/tối (defaultHighlightStyle chỉ hợp nền sáng).
+const highlight = HighlightStyle.define([
+  { tag: [t.propertyName, t.definition(t.propertyName)], color: 'var(--ac-color-code-key)' },
+  { tag: [t.string, t.special(t.string), t.content], color: 'var(--ac-color-code-string)' },
+  { tag: t.number, color: 'var(--ac-color-code-number)' },
+  { tag: [t.bool, t.null, t.keyword, t.atom], color: 'var(--ac-color-code-atom)' },
+  { tag: t.comment, color: 'var(--ac-color-code-comment)' },
+  { tag: [t.punctuation, t.separator, t.meta], color: 'var(--ac-color-text-muted)' },
+]);
 
 /** Đánh dấu transaction đến từ store (canvas, undo/redo) để không ghi ngược lại thành "gõ phím". */
 const external = Annotation.define<boolean>();
@@ -72,7 +93,7 @@ const setup = [
   dropCursor(),
   EditorState.allowMultipleSelections.of(true),
   indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  syntaxHighlighting(highlight),
   bracketMatching(),
   closeBrackets(),
   autocompletion(),
@@ -101,7 +122,11 @@ export function YamlEditor() {
       extensions: [
         setup,
         yaml(),
-        yamlLanguage.data.of({ autocomplete: yamlCompletion(() => useApp.getState().model) }),
+        yamlLanguage.data.of({
+          // Gợi ý lấy từ schema kiến trúc — sai với file mind map nên tắt.
+          autocomplete: (ctx: CompletionContext) =>
+            useApp.getState().kind === 'mindmap' ? null : architectureCompletion(ctx),
+        }),
         lintGutter(),
         keymap.of([indentWithTab]),
         theme,
