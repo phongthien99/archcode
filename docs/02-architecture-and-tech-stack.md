@@ -369,6 +369,7 @@ Các tính năng ở V1/V2 (semantic diff, Mermaid/Terraform import, AI) đều 
 | File System Access API không có trên Firefox/Safari | Trung bình | Fallback upload/download + IndexedDB |
 | DSL thay đổi phá vỡ file cũ | Trung bình | Trường `version` + migration (AAC-09) ngay từ đầu |
 | Model lớn (>1000 node) chậm trên canvas | Thấp (MVP) | Virtualization của React Flow, view lọc, chỉ render view hiện tại |
+| **R-ROUTE-PERF** — libavoid-js chậm: route một view 50 node / 80 connector ~180 ms; 100 / 200 ~23 s; 200 / 400 ~16 s (đo lại sau đính chính, [spikes/libavoid.md](./spikes/libavoid.md)). Không tham số nào đưa view 100 node xuống dưới ~11 s. Có group thì nhanh hơn nhiều (100/200 ~1.7 s, 200/400 ~2.2 s) vì node trong group bị chặn được bỏ khỏi router — rủi ro tập trung ở **view lớn không có group**. Ảnh hưởng cả thao tác kéo (KPI 8) lẫn xuất SVG/HTML/CLI ở view lớn | Cao (KPI 8: 200/400 ≥ 50 fps; thời gian xuất) | Theo dõi trong S6-ROUTE-06/07. Phương án dự phòng: (0) ngưỡng cứng cho mọi nơi — view vượt ngưỡng (~50 connector) dùng router hiện tại kể cả khi xuất; (1) route hai tầng — router cũ khi kéo, libavoid trong Worker sau khi thả và khi xuất; (2) ngưỡng số connector, vượt ngưỡng chỉ dùng libavoid khi xuất; (3) router tự viết (lưới visibility + A*). Luôn giữ router cũ làm fallback (S6-ROUTE-07) |
 
 ---
 
