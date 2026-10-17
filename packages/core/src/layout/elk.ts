@@ -8,6 +8,7 @@ import {
 } from '../render/nodeContent';
 import type { Component, Group, LayoutDirection, Relationship } from '../types';
 import type { ResolvedView } from '../views/resolve';
+import { loadRouter, routeEdgesAvoid } from './avoid';
 import { GROUP_PADDING, manualLayout } from './manual';
 import type { Point } from './route';
 
@@ -61,6 +62,11 @@ export interface LayoutOptions {
   positions?: Record<string, Point>;
   /** Điểm gấp của connector theo ID quan hệ (chỉ dùng với layout thủ công). */
   waypoints?: Record<string, Point[]>;
+  /**
+   * Layout thủ công: connector tránh node/group bằng libavoid (mặc định `true`).
+   * `false` → luôn dùng router cũ, giống canvas khi đang kéo.
+   */
+  avoidNodes?: boolean;
 }
 
 const ELK_DIRECTION: Record<LayoutDirection, string> = {
@@ -80,7 +86,16 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
   const direction = options.direction ?? view.view.layout.direction;
   const positions = options.positions;
   if (positions && view.components.some((c) => Object.hasOwn(positions, c.id))) {
-    return manualLayout({ view, direction, positions, waypoints: options.waypoints });
+    // Connector tránh node/group bằng libavoid; nạp lỗi → `routeEdgesAvoid` tự dùng router cũ (S6-ROUTE-07).
+    const avoidNodes = options.avoidNodes !== false;
+    if (avoidNodes) await loadRouter();
+    return manualLayout({
+      view,
+      direction,
+      positions,
+      waypoints: options.waypoints,
+      route: avoidNodes ? routeEdgesAvoid : undefined,
+    });
   }
   elk ??= new ELK();
 

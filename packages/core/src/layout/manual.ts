@@ -1,7 +1,8 @@
 import { edgeLabelContent, nodeContent, type NodeContent } from '../render/nodeContent';
 import type { Component, Group, LayoutDirection } from '../types';
 import type { ResolvedView } from '../views/resolve';
-import { routeEdges, type Box, type Point } from './route';
+import type { AvoidOptions } from './avoid';
+import { routeEdges, type Box, type Point, type RouteRequest, type RouteResult } from './route';
 
 /** Khoảng đệm của group quanh phần tử con — giống `elk.padding` của group trong auto-layout. */
 /** Padding group (spec: 24–32px); `top` gồm cả dòng tiêu đề 14px. */
@@ -214,10 +215,25 @@ export interface ManualInput {
   direction: LayoutDirection;
   positions: Record<string, Point>;
   waypoints?: Record<string, Point[]>;
+  /**
+   * Router connector; mặc định router cũ. `layoutView` truyền `routeEdgesAvoid` (libavoid) —
+   * truyền vào thay vì import để canvas (main thread) dùng `manual.ts` mà không kéo libavoid theo.
+   */
+  route?: (
+    boxes: Map<string, Box>,
+    edges: RouteRequest[],
+    options: AvoidOptions,
+  ) => Map<string, RouteResult>;
 }
 
 /** Layout thủ công: vị trí node theo file layout (node mới tự đặt), group bao quanh, connector orthogonal. */
-export function manualLayout({ view, direction, positions, waypoints = {} }: ManualInput) {
+export function manualLayout({
+  view,
+  direction,
+  positions,
+  waypoints = {},
+  route = routeEdges,
+}: ManualInput) {
   const components = uniqueById(view.components);
   const contents = new Map<string, NodeContent>(components.map((c) => [c.id, nodeContent(c)]));
   const boxes = placeNodes({ ...view, components }, contents, positions, direction);
@@ -235,16 +251,21 @@ export function manualLayout({ view, direction, positions, waypoints = {} }: Man
     });
 
   const labels = new Map(view.relationships.map((r, i) => [i, edgeLabelContent(r)]));
-  const routes = routeEdges(
-    boxes,
-    view.relationships.map((r, i) => ({
-      id: String(i),
-      from: r.from,
-      to: r.to,
-      label: labels.get(i),
-      waypoints: waypoints[r.id],
+  const requests = view.relationships.map((r, i) => ({
+    id: String(i),
+    from: r.from,
+    to: r.to,
+    label: labels.get(i),
+    waypoints: waypoints[r.id],
+  }));
+  const routes = route(boxes, requests, {
+    groups: groups.map((g) => ({
+      id: g.group.id,
+      parent: g.group.parent,
+      box: { x: g.x, y: g.y, width: g.width, height: g.height },
     })),
-  );
+    nodeGroup: new Map(components.map((c) => [c.id, c.group])),
+  });
   const edges = view.relationships.flatMap((relationship, i) => {
     const route = routes.get(String(i));
     if (!route) return [];

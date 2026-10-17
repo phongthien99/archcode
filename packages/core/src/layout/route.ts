@@ -150,10 +150,7 @@ export function routeEdges(
       );
     }
     const route: RouteResult = { points };
-    if (edge.label) {
-      const mid = midpoint(points);
-      route.label = round({ x: mid.x - edge.label.width / 2, y: mid.y - edge.label.height / 2 });
-    }
+    if (edge.label) route.label = labelPosition(points, edge.label);
     result.set(edge.id, route);
   }
   return result;
@@ -182,6 +179,12 @@ function selfLoop(b: Box): Point[] {
   const r = round({ x: b.x + b.width, y: b.y + b.height * 0.3 });
   const t = round({ x: b.x + b.width * 0.7, y: b.y });
   return [r, { x: r.x + 24, y: r.y }, { x: r.x + 24, y: t.y - 24 }, { x: t.x, y: t.y - 24 }, t];
+}
+
+/** Góc trên trái của nhãn, đặt nhãn ở giữa đường đi. */
+export function labelPosition(points: Point[], label: { width: number; height: number }): Point {
+  const mid = midpoint(points);
+  return round({ x: mid.x - label.width / 2, y: mid.y - label.height / 2 });
 }
 
 /** Điểm giữa đường gấp khúc theo chiều dài. */

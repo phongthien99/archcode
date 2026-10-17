@@ -64,6 +64,15 @@ export {
   type ParsedLayout,
 } from './layout/file';
 export { routeEdges, type Box, type RouteRequest, type RouteResult } from './layout/route';
+export {
+  loadRouter,
+  setRouterWasmUrl,
+  routerReady,
+  routeEdgesAvoid,
+  MAX_AVOID_EDGES,
+  type AvoidGroup,
+  type AvoidOptions,
+} from './layout/avoid';
 export { computeGroupBoxes, placeNodes, GROUP_PADDING } from './layout/manual';
 export { shapeSvg, iconSvg, edgePath, nodeBodySvg, nodeClass, nodeTooltip } from './render/svg';
 export {

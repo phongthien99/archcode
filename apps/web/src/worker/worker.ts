@@ -16,6 +16,7 @@ import {
   renderMindmapSvg,
   renderSvg,
   resolveView,
+  setRouterWasmUrl,
   validate,
   validateMindmap,
   viewLayout,
@@ -34,10 +35,14 @@ import type {
   CoreWorkerApi,
   ViewPositions,
 } from './api';
+import libavoidWasm from 'libavoid-js/libavoid.wasm?url';
 import { installElkShim } from './elk-shim';
 
 // Phải chạy trước lần layout đầu tiên — xem giải thích trong elk-shim.ts.
 installElkShim();
+// URL thật (có hash) của libavoid.wasm: không đặt thì libavoid-js tìm `libavoid.wasm` cạnh worker
+// → 404 → connector lặng lẽ dùng router cũ. WASM chỉ nạp ở lần layout thủ công đầu tiên.
+setRouterWasmUrl(libavoidWasm);
 
 // Cache theo text: đổi view, kéo node không cần parse lại.
 let cache: { text: string; result: ValidationResult; ranges?: AnalyzeResult['ranges'] } | undefined;

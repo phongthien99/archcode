@@ -5,7 +5,8 @@
   "type": "module",
   "description": "ArchCode CLI: validate và build kiến trúc trong CI",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --minify --outfile=dist/archcode.mjs --banner:js=\"#!/usr/bin/env node\nimport { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --minify --outfile=dist/archcode.mjs --banner:js=\"#!/usr/bin/env node\nimport { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" && pnpm run build:wasm",
+    "build:wasm": "cp ../core/node_modules/libavoid-js/dist/libavoid.wasm dist/libavoid.wasm && cp ../core/node_modules/libavoid-js/LICENSE dist/LICENSE.libavoid",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
