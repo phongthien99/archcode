@@ -1,11 +1,13 @@
 import type { Point } from '../layout/route';
 import { textWidth, wrapText } from '../render/text';
 import {
+  declaredCollapsed,
   MIND_COLORS,
   type MindColor,
   type MindLink,
   type MindmapModel,
   type MindNode,
+  type MindStyle,
 } from './types';
 
 export interface MindBox {
@@ -13,6 +15,8 @@ export interface MindBox {
   /** Màu hiệu lực: khai báo trên node, kế thừa từ nhánh cha, hoặc tự gán cho nhánh cấp 1. */
   color: MindColor | undefined;
   side: 'left' | 'right' | 'root';
+  /** `box`: khối bo tròn; `underline`: chữ trên gạch chân (nhánh phụ kiểu classic). */
+  shape: 'box' | 'underline';
   lines: string[];
   fontSize: number;
   /** Khoảng cách từ mép box tới chữ. */
@@ -20,6 +24,8 @@ export interface MindBox {
   padY: number;
   /** Số node con bị ẩn vì `collapsed` (tính cả cháu chắt). */
   hidden: number;
+  /** Số con trực tiếp, tính cả con đang ẩn — dùng cho nút mở/đóng. */
+  childCount: number;
   /** Tọa độ tuyệt đối của góc trên trái. */
   x: number;
   y: number;
@@ -45,41 +51,80 @@ export interface MindmapLayout {
   links: { link: MindLink; from: MindBox; to: MindBox }[];
 }
 
+interface Level {
+  fontSize: number;
+  padX: number;
+  padY: number;
+  maxWidth: number;
+  hGap: number;
+  vGap: number;
+  bold: boolean;
+}
+
 /** Kích thước chữ và khoảng cách theo cấp: 0 = gốc, 1 = nhánh chính, 2+ = nhánh phụ. */
-const LEVELS = [
-  { fontSize: 18, padX: 20, padY: 12, maxWidth: 240, hGap: 56, vGap: 20 },
-  { fontSize: 15, padX: 14, padY: 8, maxWidth: 220, hGap: 40, vGap: 14 },
-  { fontSize: 13, padX: 6, padY: 5, maxWidth: 200, hGap: 32, vGap: 6 },
-] as const;
+const LEVELS: Record<MindStyle, Level[]> = {
+  classic: [
+    { fontSize: 18, padX: 20, padY: 12, maxWidth: 240, hGap: 56, vGap: 20, bold: true },
+    { fontSize: 15, padX: 14, padY: 8, maxWidth: 220, hGap: 40, vGap: 14, bold: true },
+    { fontSize: 13, padX: 6, padY: 5, maxWidth: 200, hGap: 32, vGap: 6, bold: false },
+  ],
+  // Khoảng ngang rộng hơn: nút mở/đóng nằm ngoài mép node, nhánh mọc ra sau nút.
+  notebook: [
+    { fontSize: 16, padX: 18, padY: 12, maxWidth: 220, hGap: 64, vGap: 16, bold: true },
+    // Nhánh chính in đậm (mindmapCss `.ac-mm-d1`) — đo chữ phải khớp, không thì tràn khỏi khối.
+    { fontSize: 14, padX: 14, padY: 9, maxWidth: 220, hGap: 56, vGap: 12, bold: true },
+    { fontSize: 13, padX: 12, padY: 7, maxWidth: 220, hGap: 56, vGap: 10, bold: false },
+  ],
+};
 const LINE_HEIGHT = 1.3;
 const MAX_LINES = 4;
 
-const level = (depth: number) => LEVELS[Math.min(depth, LEVELS.length - 1)]!;
+/** Màu theo tầng của `notebook` (tầng 1 trở đi, lặp lại khi cây sâu hơn). */
+const NOTEBOOK_DEPTH_COLORS: readonly MindColor[] = ['indigo', 'teal', 'amber', 'pink', 'sky'];
+
+export interface MindmapLayoutOptions {
+  /**
+   * Ghi đè trạng thái thu gọn của từng node (vd. trạng thái mở/đóng trên giao diện).
+   * Không truyền → dùng `collapsed` khai báo trong YAML.
+   */
+  collapsed?: (node: MindNode) => boolean;
+}
 
 /**
  * Layout mind map kiểu cổ điển: mỗi cây con chiếm một dải dọc, con xếp chồng và căn giữa theo cha.
  * Không dùng DOM, đồng bộ, deterministic (cùng model → cùng tọa độ). Thêm node chỉ đẩy các nhánh
  * cùng phía ra xa, không làm phía bên kia đổi chỗ.
  */
-export function layoutMindmap(model: MindmapModel): MindmapLayout {
+export function layoutMindmap(
+  model: MindmapModel,
+  options: MindmapLayoutOptions = {},
+): MindmapLayout {
+  const style = model.style ?? 'classic';
+  const levels = LEVELS[style];
+  const level = (depth: number) => levels[Math.min(depth, levels.length - 1)]!;
+  const shapeOf = (node: MindNode) =>
+    style === 'classic' && node.depth >= 2 ? 'underline' : 'box';
+  const isCollapsed = options.collapsed ?? ((node: MindNode) => declaredCollapsed(model, node));
+  const visibleChildren = (node: MindNode) => (isCollapsed(node) ? [] : node.children);
   const boxes: MindBox[] = [];
   const branches: MindBranch[] = [];
   const byId = new Map<string, MindBox>();
 
   const measure = (node: MindNode, color: MindColor | undefined, side: MindBox['side']) => {
     const l = level(node.depth);
-    const bold = node.depth <= 1;
-    const lines = wrapText(node.text || ' ', l.maxWidth, l.fontSize, MAX_LINES, bold);
-    const textW = Math.max(...lines.map((line) => textWidth(line, l.fontSize, bold)));
+    const lines = wrapText(node.text || ' ', l.maxWidth, l.fontSize, MAX_LINES, l.bold);
+    const textW = Math.max(...lines.map((line) => textWidth(line, l.fontSize, l.bold)));
     const box: MindBox = {
       node,
       color,
       side,
+      shape: shapeOf(node),
       lines,
       fontSize: l.fontSize,
       padX: l.padX,
       padY: l.padY,
-      hidden: node.collapsed ? countDescendants(node) : 0,
+      hidden: node.children.length && isCollapsed(node) ? countDescendants(node) : 0,
+      childCount: node.children.length,
       x: 0,
       y: 0,
       width: Math.ceil(textW + 2 * l.padX),
@@ -104,35 +149,14 @@ export function layoutMindmap(model: MindmapModel): MindmapLayout {
     return value;
   };
 
-  /**
-   * Đặt các con của `parent` thành một cột ở phía `side`, căn giữa theo tâm dọc của cha.
-   * Màu: khai báo trên node, nếu không thì `inherit` (nhánh cấp 1: màu tự gán; sâu hơn: màu của cha).
-   */
-  const placeChildren = (
-    parent: MindBox,
-    kids: MindNode[],
-    side: 'left' | 'right',
-    inherit: (kid: MindNode) => MindColor | undefined,
-  ) => {
-    if (!kids.length) return;
-    const l = level(parent.node.depth + 1);
-    const total = sum(kids.map(band)) + l.vGap * (kids.length - 1);
-    let top = parent.y + parent.height / 2 - total / 2;
-    for (const kid of kids) {
-      const box = measure(kid, kid.color ?? inherit(kid), side);
-      const h = band(kid);
-      box.y = top + h / 2 - box.height / 2;
-      box.x = side === 'right' ? parent.x + parent.width + l.hGap : parent.x - l.hGap - box.width;
-      branches.push({ parent, child: box, ...anchors(parent, box, side) });
-      placeChildren(box, visibleChildren(kid), side, () => box.color);
-      top += h + l.vGap;
-    }
+  const measureHeight = (node: MindNode) => {
+    const l = level(node.depth);
+    const lines = wrapText(node.text || ' ', l.maxWidth, l.fontSize, MAX_LINES, l.bold);
+    return Math.ceil(lines.length * l.fontSize * LINE_HEIGHT + 2 * l.padY);
   };
 
   const root = model.root;
   const rootBox = measure(root, root.color, 'root');
-  rootBox.x = -rootBox.width / 2;
-  rootBox.y = -rootBox.height / 2;
 
   // Nhánh cấp 1 chưa khai báo màu: xoay vòng theo thứ tự khai báo, bỏ qua màu nhánh khác đã chọn.
   // Tính trên toàn bộ con của gốc nên thu gọn hay đổi phía một nhánh không làm màu nhánh khác nhảy.
@@ -146,10 +170,41 @@ export function layoutMindmap(model: MindmapModel): MindmapLayout {
         (pool.length ? pool : MIND_COLORS)[auto.size % (pool.length || MIND_COLORS.length)]!,
       );
   }
-  const autoColor = (kid: MindNode) => auto.get(kid);
+  // Box có màu do khai báo (trên chính nó hoặc tổ tiên dưới gốc) — `notebook` cho con kế thừa.
+  const declared = new Set<MindBox>();
+  /** Màu của `kid` khi không tự khai báo. */
+  const inheritedColor = (kid: MindNode, parent: MindBox): MindColor | undefined => {
+    if (style === 'notebook') {
+      return declared.has(parent)
+        ? parent.color
+        : NOTEBOOK_DEPTH_COLORS[(kid.depth - 1) % NOTEBOOK_DEPTH_COLORS.length];
+    }
+    return parent.side === 'root' ? auto.get(kid) : parent.color;
+  };
+
+  /** Đặt các con của `parent` thành một cột ở phía `side`, căn giữa theo tâm dọc của cha. */
+  const placeChildren = (parent: MindBox, kids: MindNode[], side: 'left' | 'right') => {
+    if (!kids.length) return;
+    const l = level(parent.node.depth + 1);
+    const total = sum(kids.map(band)) + l.vGap * (kids.length - 1);
+    let top = parent.y + parent.height / 2 - total / 2;
+    for (const kid of kids) {
+      const box = measure(kid, kid.color ?? inheritedColor(kid, parent), side);
+      if (kid.color || declared.has(parent)) declared.add(box);
+      const h = band(kid);
+      box.y = top + h / 2 - box.height / 2;
+      box.x = side === 'right' ? parent.x + parent.width + l.hGap : parent.x - l.hGap - box.width;
+      branches.push({ parent, child: box, ...anchors(parent, box, side) });
+      placeChildren(box, visibleChildren(kid), side);
+      top += h + l.vGap;
+    }
+  };
+
+  rootBox.x = -rootBox.width / 2;
+  rootBox.y = -rootBox.height / 2;
   const [right, left] = splitSides(model, visibleChildren(root), band);
-  placeChildren(rootBox, right, 'right', autoColor);
-  placeChildren(rootBox, left, 'left', autoColor);
+  placeChildren(rootBox, right, 'right');
+  placeChildren(rootBox, left, 'left');
 
   const links = model.links.flatMap((link) => {
     const from = byId.get(link.from);
@@ -205,7 +260,7 @@ function splitSides(
  */
 function anchors(parent: MindBox, child: MindBox, side: 'left' | 'right') {
   const anchorY = (box: MindBox) =>
-    box.node.depth >= 2 ? box.y + box.height : box.y + box.height / 2;
+    box.shape === 'underline' ? box.y + box.height : box.y + box.height / 2;
   const from: Point =
     parent.side === 'root'
       ? // Nhánh mọc từ trong viền gốc ra một chút, để chỗ nối không lộ khe hở.
@@ -213,16 +268,6 @@ function anchors(parent: MindBox, child: MindBox, side: 'left' | 'right') {
       : { x: side === 'right' ? parent.x + parent.width : parent.x, y: anchorY(parent) };
   const to: Point = { x: side === 'right' ? child.x : child.x + child.width, y: anchorY(child) };
   return { from, to };
-}
-
-function measureHeight(node: MindNode): number {
-  const l = level(node.depth);
-  const lines = wrapText(node.text || ' ', l.maxWidth, l.fontSize, MAX_LINES, node.depth <= 1);
-  return Math.ceil(lines.length * l.fontSize * LINE_HEIGHT + 2 * l.padY);
-}
-
-function visibleChildren(node: MindNode): MindNode[] {
-  return node.collapsed ? [] : node.children;
 }
 
 function countDescendants(node: MindNode): number {

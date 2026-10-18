@@ -182,6 +182,29 @@ describe('layoutMindmap', () => {
     expect(layout.boxes.some((b) => b.node.text === 'Search v2')).toBe(false);
   });
 
+  it('options.collapsed ghi đè trạng thái trong YAML', () => {
+    const { model } = validateMindmap(fixture('mindmap-launch.yaml'));
+    const flag = (layout: MindmapLayout) =>
+      layout.boxes.find((b) => b.node.text === 'Feature flag')!;
+    // Mở nhánh đang thu gọn trong YAML.
+    const opened = layoutMindmap(model!, { collapsed: () => false });
+    expect(flag(opened).hidden).toBe(0);
+    expect(opened.boxes.some((b) => b.node.text === 'Search v2')).toBe(true);
+    // Thu gọn một nhánh cấp 1.
+    const closed = layoutMindmap(model!, { collapsed: (n) => n.id === 'tech' || n.collapsed });
+    expect(boxOf(closed, 'tech').hidden).toBe(5);
+    expect(closed.boxes.some((b) => b.node.id === 'migration')).toBe(false);
+    // Màu nhánh khác không nhảy khi thu gọn.
+    expect(boxOf(closed, 'support').color).toBe('orange');
+  });
+
+  it('childCount: số con trực tiếp, kể cả khi đang thu gọn', () => {
+    const layout = layoutOf(fixture('mindmap-launch.yaml'));
+    expect(boxOf(layout, 'launch').childCount).toBe(4);
+    expect(layout.boxes.find((b) => b.node.text === 'Feature flag')!.childCount).toBe(2);
+    expect(boxOf(layout, 'load-test').childCount).toBe(0);
+  });
+
   it('màu: tự gán theo nhánh cấp 1, khai báo thì ghi đè, con kế thừa', () => {
     const layout = layoutOf(fixture('mindmap-launch.yaml'));
     expect(boxOf(layout, 'launch').color).toBeUndefined();
@@ -208,6 +231,69 @@ describe('layoutMindmap', () => {
     const layout = layoutOf(mm('root: Một mình\n'));
     expect(layout.boxes).toHaveLength(1);
     expect(layout.branches).toEqual([]);
+  });
+});
+
+describe('style notebook', () => {
+  it('validate: mặc định LR, expandDepth 1; khai báo thì ghi đè', () => {
+    const { model, diagnostics } = validateMindmap(fixture('mindmap-notebook.yaml'));
+    expect(diagnostics).toEqual([]);
+    expect([model!.style, model!.direction, model!.expandDepth]).toEqual(['notebook', 'LR', 2]);
+    const bare = validateMindmap(mm('style: notebook\nroot: R\n')).model!;
+    expect([bare.direction, bare.expandDepth]).toEqual(['LR', 1]);
+    const classic = validateMindmap(mm('root: R\n')).model!;
+    expect([classic.style, classic.direction, classic.expandDepth]).toEqual([
+      'classic',
+      'both',
+      undefined,
+    ]);
+  });
+
+  it('validate: giá trị sai', () => {
+    const { diagnostics } = validateMindmap(mm('style: notebok\nexpandDepth: -1\nroot: R\n'));
+    expect(diagnostics.map((d) => [d.code, d.hint ?? d.message])).toEqual([
+      ['schema-enum', 'Có phải ý bạn là "notebook"?'],
+      ['schema-type', '"expandDepth" phải là số nguyên ≥ 0'],
+    ]);
+  });
+
+  it('expandDepth: node sâu hơn đóng sẵn; collapsed trong YAML vẫn được tôn trọng', () => {
+    const layout = layoutOf(fixture('mindmap-notebook.yaml'));
+    // Tầng 0–2 hiện, tầng 3 ẩn.
+    expect(Math.max(...layout.boxes.map((b) => b.node.depth))).toBe(2);
+    expect(boxOf(layout, 'bounded-context').hidden).toBe(2);
+    expect(boxOf(layout, 'ubiquitous').hidden).toBe(0);
+    const depth1 = layoutOf(
+      mm('style: notebook\nroot:\n  text: R\n  children: [{ text: A, children: [a] }]\n'),
+    );
+    expect(depth1.boxes).toHaveLength(2);
+  });
+
+  it('mọi node là khối, một phía, màu theo tầng; color khai báo được kế thừa', () => {
+    const layout = layoutOf(fixture('mindmap-notebook.yaml'));
+    expect(new Set(layout.boxes.map((b) => b.shape))).toEqual(new Set(['box']));
+    expect(new Set(layout.boxes.slice(1).map((b) => b.side))).toEqual(new Set(['right']));
+    expect(boxOf(layout, 'strategic').color).toBe('indigo');
+    expect(boxOf(layout, 'tactical').color).toBe('indigo');
+    expect(boxOf(layout, 'aggregate').color).toBe('teal');
+    expect(boxOf(layout, 'practice').color).toBe('red');
+    const arch = layout.boxes.find((b) => b.node.text === 'Kiến trúc')!;
+    expect(arch.color).toBe('red');
+  });
+
+  it('nhánh neo ở giữa mép node (không neo ở đáy như gạch chân)', () => {
+    const layout = layoutOf(fixture('mindmap-notebook.yaml'));
+    const b = layout.branches.find((x) => x.child.node.id === 'aggregate')!;
+    expect(b.to.y).toBe(b.child.y + b.child.height / 2);
+  });
+
+  it('SVG: nhánh phụ vẽ dạng khối', () => {
+    const { model } = validateMindmap(fixture('mindmap-notebook.yaml'));
+    const svg = renderMindmapSvg(layoutMindmap(model!));
+    expect(svg).toMatch(
+      /class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed[^"]*"[^>]*><title>[^<]*<\/title><rect/,
+    );
+    expect(svg).toMatchSnapshot();
   });
 });
 

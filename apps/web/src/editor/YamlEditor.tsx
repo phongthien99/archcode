@@ -35,8 +35,10 @@ import { tags as t } from '@lezer/highlight';
 import { useEffect, useRef } from 'react';
 import { useApp } from '../store';
 import { yamlCompletion } from './completion';
+import { mindmapCompletion } from './mindmapCompletion';
 
 const architectureCompletion = yamlCompletion(() => useApp.getState().model);
+const mindCompletion = mindmapCompletion(() => useApp.getState().mindmap);
 import { toCmDiagnostics } from './lint';
 
 const theme = EditorView.theme({
@@ -123,9 +125,10 @@ export function YamlEditor() {
         setup,
         yaml(),
         yamlLanguage.data.of({
-          // Gợi ý lấy từ schema kiến trúc — sai với file mind map nên tắt.
           autocomplete: (ctx: CompletionContext) =>
-            useApp.getState().kind === 'mindmap' ? null : architectureCompletion(ctx),
+            useApp.getState().kind === 'mindmap'
+              ? mindCompletion(ctx)
+              : architectureCompletion(ctx),
         }),
         lintGutter(),
         keymap.of([indentWithTab]),

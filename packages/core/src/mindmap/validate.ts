@@ -8,27 +8,22 @@ import { sortDiagnostics } from '../validator';
 import {
   MIND_COLORS,
   MIND_DIRECTIONS,
+  MIND_LINK_FIELDS,
+  MIND_NODE_FIELDS,
+  MIND_ROOT_FIELDS,
+  MIND_STYLES,
   type MindColor,
   type MindDirection,
+  type MindStyle,
   type MindLink,
   type MindmapValidationResult,
   type MindNode,
   type MindSide,
 } from './types';
 
-const ROOT_FIELDS = ['version', 'kind', 'direction', 'root', 'links'];
-const NODE_FIELDS = [
-  'id',
-  'text',
-  'note',
-  'color',
-  'side',
-  'collapsed',
-  'tags',
-  'link',
-  'children',
-];
-const LINK_FIELDS = ['from', 'to', 'label'];
+const ROOT_FIELDS: readonly string[] = MIND_ROOT_FIELDS;
+const NODE_FIELDS: readonly string[] = MIND_NODE_FIELDS;
+const LINK_FIELDS: readonly string[] = MIND_LINK_FIELDS;
 /** Chặn cây sâu bất thường (ví dụ sinh tự động) làm tràn stack khi layout/render. */
 const MAX_DEPTH = 64;
 
@@ -64,11 +59,26 @@ export function validateMindmap(text: string): MindmapValidationResult {
     report.error(['kind'], 'schema-enum', '"kind" phải là "mindmap"');
   }
 
-  let direction: MindDirection = 'both';
+  let style: MindStyle = 'classic';
+  if (data.style !== undefined) {
+    if (MIND_STYLES.includes(data.style as MindStyle)) style = data.style as MindStyle;
+    else report.enumError(['style'], data.style, MIND_STYLES);
+  }
+
+  let direction: MindDirection = style === 'notebook' ? 'LR' : 'both';
   if (data.direction !== undefined) {
     if (MIND_DIRECTIONS.includes(data.direction as MindDirection)) {
       direction = data.direction as MindDirection;
     } else report.enumError(['direction'], data.direction, MIND_DIRECTIONS);
+  }
+
+  let expandDepth: number | undefined = style === 'notebook' ? 1 : undefined;
+  if (data.expandDepth !== undefined) {
+    if (Number.isInteger(data.expandDepth) && (data.expandDepth as number) >= 0) {
+      expandDepth = data.expandDepth as number;
+    } else {
+      report.error(['expandDepth'], 'schema-type', '"expandDepth" phải là số nguyên ≥ 0');
+    }
   }
 
   if (data.root === undefined) {
@@ -82,7 +92,15 @@ export function validateMindmap(text: string): MindmapValidationResult {
 
   const links = readLinks(data.links, report, ids);
   return {
-    model: { version: SCHEMA_VERSION, kind: 'mindmap', direction, root, links },
+    model: {
+      version: SCHEMA_VERSION,
+      kind: 'mindmap',
+      style,
+      direction,
+      ...(expandDepth === undefined ? {} : { expandDepth }),
+      root,
+      links,
+    },
     diagnostics: sortDiagnostics(diagnostics),
   };
 }
@@ -312,11 +330,16 @@ class Reporter {
     });
   }
 
-  unknownFields(raw: Record<string, unknown>, path: YamlPath, known: string[], where: string) {
+  unknownFields(
+    raw: Record<string, unknown>,
+    path: YamlPath,
+    known: readonly string[],
+    where: string,
+  ) {
     for (const key of Object.keys(raw)) {
       if (known.includes(key)) continue;
       const keyPath = [...path, key];
-      const suggestion = closestMatch(key, known);
+      const suggestion = closestMatch(key, [...known]);
       this.out.push({
         severity: 'warning',
         code: 'schema-unknown-field',

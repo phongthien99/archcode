@@ -38,6 +38,8 @@ export function mindmapCss(): string {
     `.ac-mm-d1>.ac-mm-shape{fill:color-mix(in srgb,${mm} 12%,${v('label-bg', s.surface)});stroke:${mm};stroke-width:2}`,
     '.ac-mm-d1>text{font-weight:600}',
     `.ac-mm-d2>.ac-mm-shape{fill:none;stroke:${mm};stroke-width:1.5;stroke-linecap:round}`,
+    // Nhánh phụ dạng khối (style notebook): nền nhạt hơn nhánh chính, viền mảnh.
+    `.ac-mm-d2.ac-mm-boxed>.ac-mm-shape{fill:color-mix(in srgb,${mm} 8%,${v('label-bg', s.surface)});stroke-width:1.25}`,
     `.ac-mm-badge>circle{fill:${mm}}`,
     `.ac-mm-badge>text{fill:${v('label-bg', s.surface)};font-size:10px;font-weight:700}`,
     `.ac-mm-link>path{fill:none;stroke:${v('muted', s.textMuted)};stroke-width:1.5;stroke-dasharray:6 4}`,
@@ -46,5 +48,8 @@ export function mindmapCss(): string {
     `.ac-mm-node.ac-warning>.ac-mm-shape{stroke:${v('warning', s.warning)};stroke-width:3}`,
     `.ac-mm-node.ac-error>.ac-mm-shape{stroke:${v('error', s.danger)};stroke-width:3}`,
     '.ac-mm-node{cursor:pointer}',
+    // Chọn: viền màu focus + ring nhẹ (gốc không có viền nên thêm viền khi chọn).
+    `.ac-mm-node.ac-selected>.ac-mm-shape{filter:drop-shadow(0 0 3px color-mix(in srgb,${v('selected', s.focus)} 45%,transparent))}`,
+    `.ac-mm-node.ac-selected:not(.ac-error):not(.ac-warning)>.ac-mm-shape{stroke:${v('selected', s.focus)};stroke-width:2}`,
   ].join('\n');
 }

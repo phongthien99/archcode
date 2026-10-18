@@ -2,6 +2,7 @@ import documentPlatform from '../../../../fixtures/document-platform.yaml?raw';
 import ecommerce from './ecommerce-microservices.yaml?raw';
 import eventDriven from './event-driven.yaml?raw';
 import mindmapLaunch from '../../../../fixtures/mindmap-launch.yaml?raw';
+import mindmapNotebook from '../../../../fixtures/mindmap-notebook.yaml?raw';
 
 export interface Template {
   id: string;
@@ -39,6 +40,13 @@ export const TEMPLATES: Template[] = [
     description: 'Sơ đồ tư duy (kind: mindmap): nhánh hai phía, màu, thu gọn, link chéo',
     fileName: 'launch-plan.yaml',
     text: mindmapLaunch,
+  },
+  {
+    id: 'mindmap-notebook',
+    name: 'Mind map: ghi chú học tập',
+    description: 'Kiểu NotebookLM (style: notebook): một phía, màu theo tầng, bấm để mở từng nhánh',
+    fileName: 'ddd-notes.yaml',
+    text: mindmapNotebook,
   },
 ];
 

@@ -25,6 +25,7 @@ import {
   type Point,
 } from '@archcode/core/canvas';
 import { create } from 'zustand';
+import { findMindNode, pruneCollapsed, revealPath, type MindCollapsed } from './mindmap/collapse';
 import type { CanvasData, DocumentKind, ViewPositions } from './worker/api';
 import { core, createAnalyzer } from './worker/client';
 
@@ -91,6 +92,10 @@ export interface AppState {
   model: ArchitectureModel | null;
   /** Model khi tài liệu là mind map (`model` khi đó là null). */
   mindmap: MindmapModel | null;
+  /** Mở/đóng nhánh mind map trên giao diện — không ghi vào YAML, không vào lịch sử undo. */
+  mindCollapsed: MindCollapsed;
+  /** Yêu cầu Preview mind map chọn và căn giữa một node (tìm kiếm). */
+  mindFocus: { id: string; nonce: number } | null;
   diagnostics: Diagnostic[];
   svg: string | null;
   canvas: CanvasData | null;
@@ -163,6 +168,9 @@ export interface AppState {
   setFs(fs: FsBinding | null): void;
   notify(message: string, kind?: Notice['kind']): void;
   setSearchOpen(open: boolean): void;
+  setMindCollapsed(collapsed: MindCollapsed): void;
+  /** Mở các nhánh trên đường tới node, chọn và căn giữa node đó, nhảy tới YAML. */
+  focusMindNode(id: string): void;
   setTheme(theme: Theme): void;
   setAccent(accent: AccentName): void;
   setDiagramPalette(diagramPalette: DiagramPaletteName): void;
@@ -234,6 +242,9 @@ export const useApp = create<AppState>()((set, get) => {
         kind: result.kind,
         model: result.model,
         mindmap: result.mindmap,
+        mindCollapsed: result.mindmap
+          ? pruneCollapsed(result.mindmap, get().mindCollapsed)
+          : get().mindCollapsed,
         diagnostics: result.diagnostics,
         svg: view?.svg ?? null,
         canvas: view?.canvas ?? null,
@@ -326,6 +337,8 @@ export const useApp = create<AppState>()((set, get) => {
     kind: 'architecture',
     model: null,
     mindmap: null,
+    mindCollapsed: {},
+    mindFocus: null,
     diagnostics: [],
     svg: null,
     canvas: null,
@@ -378,6 +391,7 @@ export const useApp = create<AppState>()((set, get) => {
         canvas: null,
         model: null,
         mindmap: null,
+        mindCollapsed: {},
         saved: { text, layout: isLayoutEmpty(layout) ? '' : serializeLayout(layout) },
       });
       resetHistory();
@@ -558,6 +572,19 @@ export const useApp = create<AppState>()((set, get) => {
     },
     setSearchOpen(searchOpen) {
       set({ searchOpen });
+    },
+    setMindCollapsed(mindCollapsed) {
+      set({ mindCollapsed });
+    },
+    focusMindNode(id) {
+      const { mindmap, mindCollapsed, revealLine } = get();
+      if (!mindmap) return;
+      set({
+        mindCollapsed: revealPath(mindmap, id, mindCollapsed),
+        mindFocus: { id, nonce: Date.now() + Math.random() },
+      });
+      const source = findMindNode(mindmap.root, id)?.source;
+      if (source) revealLine(source.line, source.column, false);
     },
     setTheme(theme) {
       set({ theme });

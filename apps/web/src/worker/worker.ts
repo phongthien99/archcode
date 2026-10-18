@@ -6,6 +6,7 @@ import {
   extractEmbeddedSource,
   generateHtml,
   isAsyncRelationship,
+  declaredCollapsed,
   isMindmapSource,
   layoutMindmap,
   layoutView,
@@ -58,10 +59,15 @@ function validatedMindmap(text: string) {
 }
 
 /** Mind map chỉ có chế độ Xem trước: layout tính từ cấu trúc cây, không có vị trí ghim. */
-function mindmapSvg(text: string, standalone: boolean): string | null {
+function mindmapSvg(
+  text: string,
+  standalone: boolean,
+  overrides: Record<string, boolean> = {},
+): string | null {
   const { model, diagnostics } = validatedMindmap(text);
   if (!model) return null;
-  return renderMindmapSvg(layoutMindmap(model), {
+  const collapsed = (node: MindNode) => overrides[node.id] ?? declaredCollapsed(model, node);
+  return renderMindmapSvg(layoutMindmap(model, { collapsed }), {
     diagnostics,
     standalone,
     idPrefix: 'app-',
@@ -202,8 +208,8 @@ const api: CoreWorkerApi = {
     }
     return (await generateHtml(text, options)).html;
   },
-  async standaloneSvg(text, viewId, layoutText) {
-    if (isMindmapSource(text)) return mindmapSvg(text, true);
+  async standaloneSvg(text, viewId, layoutText, mindCollapsed) {
+    if (isMindmapSource(text)) return mindmapSvg(text, true, mindCollapsed);
     const layout = layoutText ? parseLayout(layoutText).layout : undefined;
     const { model } = validated(text).result;
     const id = viewId ?? model?.views[0]?.id ?? '';

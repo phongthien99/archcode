@@ -448,3 +448,66 @@ Exit codes:
 | `1` | Validation or rule errors. |
 | `2` | File read error or invalid CLI arguments. |
 
+
+## 12. Mind Maps (`kind: mindmap`)
+
+A file with `kind: mindmap` is a mind map instead of an architecture model. The
+web app opens it in Preview, where branches can be expanded and collapsed. The
+CLI does not build mind maps yet.
+
+```yaml
+version: 1
+kind: mindmap
+style: notebook   # classic (default) | notebook
+direction: LR     # both | LR | RL — notebook defaults to LR, classic to both
+expandDepth: 1    # levels open when the file is opened
+
+root:
+  id: ddd
+  text: Domain-Driven Design
+  children:
+    - id: strategic
+      text: Strategic design
+      children:
+        - Bounded Context        # short form: a plain string is a node
+        - text: Subdomain
+          collapsed: true
+          children: [Core, Supporting, Generic]
+    - id: tactical
+      text: Tactical design
+      color: teal
+      note: Shown as a tooltip
+      tags: [review]
+
+links:
+  - from: strategic
+    to: tactical
+    label: shapes
+```
+
+Top-level fields:
+
+| Field | Description |
+|---|---|
+| `style` | `classic`: level-2+ nodes are text on an underline, colors follow the main branch. `notebook`: every node is a rounded box, colors follow the depth, one-sided layout (NotebookLM-like). |
+| `direction` | `both` splits main branches around the root; `LR` / `RL` grows to one side. |
+| `expandDepth` | Integer ≥ 0. Nodes at this depth or deeper start collapsed. `notebook` defaults to `1` (only main branches visible); `classic` opens everything. |
+| `root` | The root node (required). |
+| `links` | Dashed cross-links between nodes that declare an explicit `id`. |
+
+Node fields: `id`, `text`, `note`, `color` (`blue`, `orange`, `green`,
+`violet`, `pink`, `teal`, `amber`, `red`, `indigo`, `sky`), `side` (`left` /
+`right`, main branches only when `direction: both`), `collapsed`, `tags`,
+`link` (a component ID in the architecture file), `children`.
+
+Expanding and collapsing in Preview:
+
+- Click the button on the outer edge of a node, or use the keyboard: arrow keys
+  move between nodes, `Space` toggles, `Enter` jumps to the YAML line.
+- Expand/collapse state is per file and per browser. It is not written to the
+  YAML and is not part of undo history. `collapsed` and `expandDepth` in the file
+  only set the initial state.
+- SVG/PNG export uses the branches currently open in Preview.
+- **Declare `id` on nodes whose state should survive edits.** Nodes without `id`
+  get a position-based ID (`~0.1`). Inserting a sibling above shifts those IDs, so
+  a remembered expand/collapse state can move to a different node.

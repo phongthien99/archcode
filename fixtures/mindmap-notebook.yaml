@@ -1,0 +1,54 @@
+version: 1
+kind: mindmap
+style: notebook
+# Mặc định của notebook: direction LR, expandDepth 1 (chỉ thấy nhánh chính khi mở file).
+expandDepth: 2
+
+root:
+  id: ddd
+  text: Domain-Driven Design
+  children:
+    - id: strategic
+      text: Thiết kế chiến lược
+      children:
+        - id: bounded-context
+          text: Bounded Context
+          note: Ranh giới mà trong đó một mô hình có nghĩa nhất quán
+          children:
+            - Context Map
+            - Anti-corruption Layer
+        - id: ubiquitous
+          text: Ubiquitous Language
+        - text: Subdomain
+          children:
+            - Core
+            - Supporting
+            - Generic
+
+    - id: tactical
+      text: Thiết kế chiến thuật
+      children:
+        - id: aggregate
+          text: Aggregate
+          children:
+            - Aggregate Root
+            - Invariant
+        - Entity
+        - Value Object
+        - Domain Event
+        - Repository
+
+    - id: practice
+      text: Thực hành
+      color: red
+      children:
+        - Event Storming
+        - text: Kiến trúc
+          children:
+            - Hexagonal
+            - CQRS
+
+links:
+  - from: bounded-context
+    to: aggregate
+    label: chứa

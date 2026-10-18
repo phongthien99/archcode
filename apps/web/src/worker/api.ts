@@ -104,7 +104,15 @@ export interface CoreWorkerApi {
   analyze(request: AnalyzeRequest): Promise<AnalyzeResult>;
   applyCommand(text: string, command: Command): MutationResult;
   exportHtml(text: string, options: ExportOptions): Promise<string>;
-  /** SVG độc lập (có style nhúng) để tải về hoặc chuyển sang PNG. */
-  standaloneSvg(text: string, viewId: string | null, layout?: string): Promise<string | null>;
+  /**
+   * SVG độc lập (có style nhúng) để tải về hoặc chuyển sang PNG.
+   * `mindCollapsed`: trạng thái mở/đóng đang xem trên Preview mind map (ghi đè YAML).
+   */
+  standaloneSvg(
+    text: string,
+    viewId: string | null,
+    layout?: string,
+    mindCollapsed?: Record<string, boolean>,
+  ): Promise<string | null>;
   extractEmbeddedSource(html: string): EmbeddedSource | null;
 }

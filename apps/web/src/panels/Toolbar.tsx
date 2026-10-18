@@ -93,7 +93,12 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
 
   const exportImage = async (format: 'svg' | 'png') => {
     const state = useApp.getState();
-    const svg = await core.standaloneSvg(state.text, state.viewId, layoutText(state));
+    const svg = await core.standaloneSvg(
+      state.text,
+      state.viewId,
+      layoutText(state),
+      state.kind === 'mindmap' ? state.mindCollapsed : undefined,
+    );
     if (!svg) throw new Error('Chưa có diagram để xuất — sửa lỗi YAML trước');
     const name = `${baseName(state.fileName)}${state.viewId ? `.${state.viewId}` : ''}.${format}`;
     if (format === 'svg') download(svg, name, 'image/svg+xml');
@@ -259,8 +264,7 @@ export function Toolbar({ onError }: { onError: (message: string) => void }) {
       <button
         type="button"
         onClick={() => useApp.getState().setSearchOpen(true)}
-        disabled={isMindmap}
-        title="Tìm component/group (Ctrl+K)"
+        title={isMindmap ? 'Tìm node (Ctrl+K)' : 'Tìm component/group (Ctrl+K)'}
       >
         Tìm
       </button>

@@ -796,3 +796,77 @@ button.danger {
   width: 168px;
   height: 112px;
 }
+
+/* Mind map tương tác (React Flow) — shape/màu dùng chung CSS với SVG xuất ra (mindmapCss). */
+.mind-flow {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  background: var(--ac-color-surface-sunken);
+}
+.mind-flow .react-flow {
+  --xy-background-color: var(--ac-color-surface-sunken);
+}
+.mind-flow .preview-tools .sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--ac-color-border);
+  margin: 2px;
+}
+.mind-flow .preview-tools select {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.mind-node {
+  position: relative;
+}
+.mind-node svg {
+  display: block;
+  overflow: visible;
+}
+.mind-toggle {
+  position: absolute;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  margin-top: -10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--mm);
+  background: var(--ac-color-surface);
+  color: var(--mm);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.mind-toggle.right {
+  left: calc(100% + 6px);
+}
+.mind-toggle.left {
+  right: calc(100% + 6px);
+}
+.mind-toggle.collapsed {
+  background: var(--mm);
+  color: var(--ac-color-surface);
+}
+.mind-toggle:hover {
+  filter: brightness(1.1);
+}
+.mind-toggle:focus-visible {
+  outline: 2px solid var(--ac-color-focus);
+  outline-offset: 1px;
+}
+.mind-flow:focus {
+  outline: none;
+}
+.mind-flow:focus-visible {
+  outline: 2px solid var(--ac-color-focus);
+  outline-offset: -2px;
+}
+.mind-toggle:not(.collapsed) {
+  font-size: 14px;
+}

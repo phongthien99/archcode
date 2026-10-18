@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`style notebook > SVG: nhánh phụ vẽ dạng khối 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" class="ac-diagram ac-mindmap" viewBox="-129.5 -218 694 436" width="694" height="436" role="img" aria-label="Domain-Driven Design">
+<title>Domain-Driven Design</title>
+<style>.ac-diagram{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif}
+.ac-shape{stroke-width:1}
+.ac-t-person>.ac-shape{fill:var(--ac-person-fill,#eef2ff);stroke:var(--ac-person-stroke,#c7d2fe)}.ac-t-person>text{fill:var(--ac-person-text,#3730a3)}.ac-t-person>.ac-meta,.ac-t-person>.ac-desc{fill:var(--ac-person-muted,#475569)}.ac-t-person>.ac-icon{stroke:var(--ac-person-text,#3730a3)}.ac-t-person>.ac-divider{stroke:var(--ac-person-stroke,#c7d2fe)}.ac-t-system>.ac-shape{fill:var(--ac-system-fill,#eff6ff);stroke:var(--ac-system-stroke,#bfdbfe)}.ac-t-system>text{fill:var(--ac-system-text,#1e40af)}.ac-t-system>.ac-meta,.ac-t-system>.ac-desc{fill:var(--ac-system-muted,#475569)}.ac-t-system>.ac-icon{stroke:var(--ac-system-text,#1e40af)}.ac-t-system>.ac-divider{stroke:var(--ac-system-stroke,#bfdbfe)}.ac-t-external>.ac-shape{fill:var(--ac-external-fill,#f1f5f9);stroke:var(--ac-external-stroke,#cbd5e1)}.ac-t-external>text{fill:var(--ac-external-text,#334155)}.ac-t-external>.ac-meta,.ac-t-external>.ac-desc{fill:var(--ac-external-muted,#475569)}.ac-t-external>.ac-icon{stroke:var(--ac-external-text,#334155)}.ac-t-external>.ac-divider{stroke:var(--ac-external-stroke,#cbd5e1)}.ac-t-frontend>.ac-shape{fill:var(--ac-frontend-fill,#f0fdfa);stroke:var(--ac-frontend-stroke,#99f6e4)}.ac-t-frontend>text{fill:var(--ac-frontend-text,#0f766e)}.ac-t-frontend>.ac-meta,.ac-t-frontend>.ac-desc{fill:var(--ac-frontend-muted,#475569)}.ac-t-frontend>.ac-icon{stroke:var(--ac-frontend-text,#0f766e)}.ac-t-frontend>.ac-divider{stroke:var(--ac-frontend-stroke,#99f6e4)}.ac-t-gateway>.ac-shape{fill:var(--ac-gateway-fill,#f5f3ff);stroke:var(--ac-gateway-stroke,#ddd6fe)}.ac-t-gateway>text{fill:var(--ac-gateway-text,#6d28d9)}.ac-t-gateway>.ac-meta,.ac-t-gateway>.ac-desc{fill:var(--ac-gateway-muted,#475569)}.ac-t-gateway>.ac-icon{stroke:var(--ac-gateway-text,#6d28d9)}.ac-t-gateway>.ac-divider{stroke:var(--ac-gateway-stroke,#ddd6fe)}.ac-t-service>.ac-shape{fill:var(--ac-service-fill,#ecfdf5);stroke:var(--ac-service-stroke,#a7f3d0)}.ac-t-service>text{fill:var(--ac-service-text,#047857)}.ac-t-service>.ac-meta,.ac-t-service>.ac-desc{fill:var(--ac-service-muted,#475569)}.ac-t-service>.ac-icon{stroke:var(--ac-service-text,#047857)}.ac-t-service>.ac-divider{stroke:var(--ac-service-stroke,#a7f3d0)}.ac-t-database>.ac-shape{fill:var(--ac-database-fill,#fffbeb);stroke:var(--ac-database-stroke,#fde68a)}.ac-t-database>text{fill:var(--ac-database-text,#92400e)}.ac-t-database>.ac-meta,.ac-t-database>.ac-desc{fill:var(--ac-database-muted,#475569)}.ac-t-database>.ac-icon{stroke:var(--ac-database-text,#92400e)}.ac-t-database>.ac-divider{stroke:var(--ac-database-stroke,#fde68a)}.ac-t-queue>.ac-shape{fill:var(--ac-queue-fill,#fff1f2);stroke:var(--ac-queue-stroke,#fecdd3)}.ac-t-queue>text{fill:var(--ac-queue-text,#be123c)}.ac-t-queue>.ac-meta,.ac-t-queue>.ac-desc{fill:var(--ac-queue-muted,#475569)}.ac-t-queue>.ac-icon{stroke:var(--ac-queue-text,#be123c)}.ac-t-queue>.ac-divider{stroke:var(--ac-queue-stroke,#fecdd3)}.ac-t-storage>.ac-shape{fill:var(--ac-storage-fill,#fffbeb);stroke:var(--ac-storage-stroke,#fde68a)}.ac-t-storage>text{fill:var(--ac-storage-text,#92400e)}.ac-t-storage>.ac-meta,.ac-t-storage>.ac-desc{fill:var(--ac-storage-muted,#475569)}.ac-t-storage>.ac-icon{stroke:var(--ac-storage-text,#92400e)}.ac-t-storage>.ac-divider{stroke:var(--ac-storage-stroke,#fde68a)}.ac-t-cache>.ac-shape{fill:var(--ac-cache-fill,#fffbeb);stroke:var(--ac-cache-stroke,#fde68a)}.ac-t-cache>text{fill:var(--ac-cache-text,#92400e)}.ac-t-cache>.ac-meta,.ac-t-cache>.ac-desc{fill:var(--ac-cache-muted,#475569)}.ac-t-cache>.ac-icon{stroke:var(--ac-cache-text,#92400e)}.ac-t-cache>.ac-divider{stroke:var(--ac-cache-stroke,#fde68a)}.ac-t-custom>.ac-shape{fill:var(--ac-custom-fill,#ffffff);stroke:var(--ac-custom-stroke,#cbd5e1)}.ac-t-custom>text{fill:var(--ac-custom-text,#334155)}.ac-t-custom>.ac-meta,.ac-t-custom>.ac-desc{fill:var(--ac-custom-muted,#475569)}.ac-t-custom>.ac-icon{stroke:var(--ac-custom-text,#334155)}.ac-t-custom>.ac-divider{stroke:var(--ac-custom-stroke,#cbd5e1)}
+.ac-t-external>.ac-shape{stroke-dasharray:6 4}
+.ac-icon{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.ac-divider{stroke-width:1;opacity:.7}
+.ac-name{font-size:14px;font-weight:600}
+.ac-desc{font-size:12px}
+.ac-meta{font-size:11px}
+.ac-edge>path{fill:none;stroke:var(--ac-edge,#94a3b8);stroke-width:1.5;stroke-linejoin:round}
+.ac-edge.ac-async>path{stroke-dasharray:6 4}
+.ac-arrow{fill:var(--ac-edge,#94a3b8)}
+.ac-arrow-error{fill:var(--ac-error,#ef4444)}
+.ac-arrow-warning{fill:var(--ac-warning,#f59e0b)}
+.ac-label rect{fill:var(--ac-label-bg,#ffffff);opacity:.92}
+.ac-label text{font-size:11px;font-weight:500;fill:var(--ac-edge-label,#475569)}
+.ac-group>rect{fill:var(--ac-group-fill,rgba(241,245,249,0.6));stroke:var(--ac-group-stroke,#cbd5e1);stroke-width:1}
+.ac-group>text{font-size:14px;font-weight:600;fill:var(--ac-group-text,#1e293b)}
+.ac-warning>.ac-shape,.ac-group.ac-warning>rect{stroke:var(--ac-warning,#f59e0b);stroke-width:2}
+.ac-error>.ac-shape,.ac-group.ac-error>rect{stroke:var(--ac-error,#ef4444);stroke-width:2}
+.ac-edge.ac-warning>path{stroke:var(--ac-warning,#f59e0b);stroke-width:2}
+.ac-edge.ac-error>path{stroke:var(--ac-error,#ef4444);stroke-width:2}
+.ac-node,.ac-edge{cursor:pointer}
+.ac-selected>.ac-shape{stroke-width:2;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--ac-selected,#3b82f6) 45%,transparent))}
+.ac-selected:not(.ac-error):not(.ac-warning)>.ac-shape{stroke:var(--ac-selected,#3b82f6)}
+.ac-mindmap{--mm:var(--ac-mm-default,#64748b)}
+.ac-mm-c-blue{--mm:var(--ac-mm-blue,#2563eb)}.ac-mm-c-orange{--mm:var(--ac-mm-orange,#ea580c)}.ac-mm-c-green{--mm:var(--ac-mm-green,#16a34a)}.ac-mm-c-violet{--mm:var(--ac-mm-violet,#7c3aed)}.ac-mm-c-pink{--mm:var(--ac-mm-pink,#db2777)}.ac-mm-c-teal{--mm:var(--ac-mm-teal,#0d9488)}.ac-mm-c-amber{--mm:var(--ac-mm-amber,#d97706)}.ac-mm-c-red{--mm:var(--ac-mm-red,#dc2626)}.ac-mm-c-indigo{--mm:var(--ac-mm-indigo,#4f46e5)}.ac-mm-c-sky{--mm:var(--ac-mm-sky,#0284c7)}
+.ac-mm-branch{fill:none;stroke:var(--mm);stroke-linecap:round}
+.ac-mm-b1{stroke-width:3}.ac-mm-b2{stroke-width:2}.ac-mm-b3{stroke-width:1.5}
+.ac-mm-node>text{fill:var(--ac-text,#0f172a)}
+.ac-mm-d0>.ac-mm-shape{fill:var(--ac-mm-root-fill,#1e293b);stroke:none}
+.ac-mm-d0>text{fill:var(--ac-mm-root-text,#ffffff);font-weight:700}
+.ac-mm-d1>.ac-mm-shape{fill:color-mix(in srgb,var(--mm) 12%,var(--ac-label-bg,#ffffff));stroke:var(--mm);stroke-width:2}
+.ac-mm-d1>text{font-weight:600}
+.ac-mm-d2>.ac-mm-shape{fill:none;stroke:var(--mm);stroke-width:1.5;stroke-linecap:round}
+.ac-mm-d2.ac-mm-boxed>.ac-mm-shape{fill:color-mix(in srgb,var(--mm) 8%,var(--ac-label-bg,#ffffff));stroke-width:1.25}
+.ac-mm-badge>circle{fill:var(--mm)}
+.ac-mm-badge>text{fill:var(--ac-label-bg,#ffffff);font-size:10px;font-weight:700}
+.ac-mm-link>path{fill:none;stroke:var(--ac-muted,#64748b);stroke-width:1.5;stroke-dasharray:6 4}
+.ac-mm-link>text{fill:var(--ac-muted,#64748b);font-size:11px}
+.ac-mm-arrow{fill:var(--ac-muted,#64748b)}
+.ac-mm-node.ac-warning>.ac-mm-shape{stroke:var(--ac-warning,#f59e0b);stroke-width:3}
+.ac-mm-node.ac-error>.ac-mm-shape{stroke:var(--ac-error,#ef4444);stroke-width:3}
+.ac-mm-node{cursor:pointer}
+.ac-mm-node.ac-selected>.ac-mm-shape{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--ac-selected,#3b82f6) 45%,transparent))}
+.ac-mm-node.ac-selected:not(.ac-error):not(.ac-warning)>.ac-mm-shape{stroke:var(--ac-selected,#3b82f6);stroke-width:2}</style>
+<defs><marker id="ac-mm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="ac-mm-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<path class="ac-mm-branch ac-mm-b1 ac-mm-c-indigo" d="M107.5,0 C138.5,0 138.5,-145.5 169.5,-145.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M335.5,-145.5 C363.5,-145.5 363.5,-186.5 391.5,-186.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M335.5,-145.5 C363.5,-145.5 363.5,-145.5 391.5,-145.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M335.5,-145.5 C363.5,-145.5 363.5,-104.5 391.5,-104.5"/>
+<path class="ac-mm-branch ac-mm-b1 ac-mm-c-indigo" d="M107.5,0 C138.5,0 138.5,20.5 169.5,20.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M340.5,20.5 C368.5,20.5 368.5,-61.5 396.5,-61.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M340.5,20.5 C368.5,20.5 368.5,-20.5 396.5,-20.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M340.5,20.5 C368.5,20.5 368.5,20.5 396.5,20.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M340.5,20.5 C368.5,20.5 368.5,61.5 396.5,61.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-teal" d="M340.5,20.5 C368.5,20.5 368.5,102.5 396.5,102.5"/>
+<path class="ac-mm-branch ac-mm-b1 ac-mm-c-red" d="M107.5,0 C138.5,0 138.5,166 169.5,166"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-red" d="M272.5,166 C300.5,166 300.5,145.5 328.5,145.5"/>
+<path class="ac-mm-branch ac-mm-b2 ac-mm-c-red" d="M272.5,166 C300.5,166 300.5,186.5 328.5,186.5"/>
+<g class="ac-mm-node ac-mm-d0" data-kind="mind-node" data-id="ddd"><title>Domain-Driven Design</title><rect class="ac-mm-shape" x="-113.5" y="-22.5" width="227" height="45" rx="12"/><text x="0" y="4.7" text-anchor="middle" font-size="16">Domain-Driven Design</text></g>
+<g class="ac-mm-node ac-mm-d1 ac-mm-c-indigo" data-kind="mind-node" data-id="strategic"><title>Thiết kế chiến lược</title><rect class="ac-mm-shape" x="169.5" y="-164" width="166" height="37" rx="8"/><text x="252.5" y="-141.7" text-anchor="middle" font-size="14">Thiết kế chiến lược</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed ac-mm-collapsed" data-kind="mind-node" data-id="bounded-context"><title>Bounded Context
+Ranh giới mà trong đó một mô hình có nghĩa nhất quán</title><rect class="ac-mm-shape" x="391.5" y="-202" width="128" height="31" rx="8"/><text x="455.5" y="-182.6" text-anchor="middle" font-size="13">Bounded Context</text><g class="ac-mm-badge"><circle cx="531.5" cy="-186.5" r="10"/><text x="531.5" y="-183" text-anchor="middle">+2</text></g></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed" data-kind="mind-node" data-id="ubiquitous"><title>Ubiquitous Language</title><rect class="ac-mm-shape" x="391.5" y="-161" width="157" height="31" rx="8"/><text x="470" y="-141.6" text-anchor="middle" font-size="13">Ubiquitous Language</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed ac-mm-collapsed" data-kind="mind-node" data-id="~0.2"><title>Subdomain</title><rect class="ac-mm-shape" x="391.5" y="-120" width="92" height="31" rx="8"/><text x="437.5" y="-100.6" text-anchor="middle" font-size="13">Subdomain</text><g class="ac-mm-badge"><circle cx="495.5" cy="-104.5" r="10"/><text x="495.5" y="-101" text-anchor="middle">+3</text></g></g>
+<g class="ac-mm-node ac-mm-d1 ac-mm-c-indigo" data-kind="mind-node" data-id="tactical"><title>Thiết kế chiến thuật</title><rect class="ac-mm-shape" x="169.5" y="2" width="171" height="37" rx="8"/><text x="255" y="24.3" text-anchor="middle" font-size="14">Thiết kế chiến thuật</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed ac-mm-collapsed" data-kind="mind-node" data-id="aggregate"><title>Aggregate</title><rect class="ac-mm-shape" x="396.5" y="-77" width="86" height="31" rx="8"/><text x="439.5" y="-57.6" text-anchor="middle" font-size="13">Aggregate</text><g class="ac-mm-badge"><circle cx="494.5" cy="-61.5" r="10"/><text x="494.5" y="-58" text-anchor="middle">+2</text></g></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed" data-kind="mind-node" data-id="~1.1"><title>Entity</title><rect class="ac-mm-shape" x="396.5" y="-36" width="60" height="31" rx="8"/><text x="426.5" y="-16.6" text-anchor="middle" font-size="13">Entity</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed" data-kind="mind-node" data-id="~1.2"><title>Value Object</title><rect class="ac-mm-shape" x="396.5" y="5" width="105" height="31" rx="8"/><text x="449" y="24.4" text-anchor="middle" font-size="13">Value Object</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed" data-kind="mind-node" data-id="~1.3"><title>Domain Event</title><rect class="ac-mm-shape" x="396.5" y="46" width="111" height="31" rx="8"/><text x="452" y="65.4" text-anchor="middle" font-size="13">Domain Event</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-teal ac-mm-boxed" data-kind="mind-node" data-id="~1.4"><title>Repository</title><rect class="ac-mm-shape" x="396.5" y="87" width="90" height="31" rx="8"/><text x="441.5" y="106.4" text-anchor="middle" font-size="13">Repository</text></g>
+<g class="ac-mm-node ac-mm-d1 ac-mm-c-red" data-kind="mind-node" data-id="practice"><title>Thực hành</title><rect class="ac-mm-shape" x="169.5" y="147.5" width="103" height="37" rx="8"/><text x="221" y="169.8" text-anchor="middle" font-size="14">Thực hành</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-red ac-mm-boxed" data-kind="mind-node" data-id="~2.0"><title>Event Storming</title><rect class="ac-mm-shape" x="328.5" y="130" width="118" height="31" rx="8"/><text x="387.5" y="149.4" text-anchor="middle" font-size="13">Event Storming</text></g>
+<g class="ac-mm-node ac-mm-d2 ac-mm-c-red ac-mm-boxed ac-mm-collapsed" data-kind="mind-node" data-id="~2.1"><title>Kiến trúc</title><rect class="ac-mm-shape" x="328.5" y="171" width="79" height="31" rx="8"/><text x="368" y="190.4" text-anchor="middle" font-size="13">Kiến trúc</text><g class="ac-mm-badge"><circle cx="419.5" cy="186.5" r="10"/><text x="419.5" y="190" text-anchor="middle">+2</text></g></g>
+<g class="ac-mm-link" data-kind="mind-link" data-from="bounded-context" data-to="aggregate"><path d="M453.5,-171 Q428.7,-126.4 441.5,-77" marker-end="url(#ac-mm-arrow)"/><text x="438.1" y="-129.2" text-anchor="middle">chứa</text></g>
+</svg>"
+`;

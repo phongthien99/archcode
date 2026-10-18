@@ -54,7 +54,7 @@ export function App() {
       if (key === 's') {
         e.preventDefault();
         save().catch((err: Error) => setError(err.message));
-      } else if (key === 'k' && state.kind !== 'mindmap') {
+      } else if (key === 'k') {
         e.preventDefault();
         state.setSearchOpen(true);
       } else if (nativeField) {

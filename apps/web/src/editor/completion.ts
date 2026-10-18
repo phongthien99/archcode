@@ -47,7 +47,7 @@ interface KeyLine {
   key: string;
 }
 
-function parseKeyLine(text: string): KeyLine | undefined {
+export function parseKeyLine(text: string): KeyLine | undefined {
   const m = /^(\s*)(-\s+)?([\w-]+)\s*:/.exec(text);
   if (!m) return undefined;
   const lead = m[1]!.length;
