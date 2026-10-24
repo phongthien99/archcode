@@ -1,4 +1,14 @@
-import { layoutView, renderSvg, resolveView, validate, type Diagnostic } from '@archcode/core';
+import {
+  checkLayout,
+  layoutView,
+  parseLayout,
+  renderSvg,
+  resolveView,
+  validate,
+  viewLayout,
+  type Diagnostic,
+  type LayoutFile,
+} from '@archcode/core';
 import { font, palette } from '@archcode/core/tokens';
 import { installElkShim } from './worker/elk-shim';
 
@@ -6,6 +16,7 @@ const ROOT_SELECTOR = '.archcode-viewer,[data-archcode-viewer]';
 const SOURCE_SELECTOR = '.archcode-source,[data-archcode-source]';
 const OUTPUT_SELECTOR = '.archcode-output,[data-archcode-output]';
 const DIAGNOSTICS_SELECTOR = '.archcode-diagnostics,[data-archcode-diagnostics]';
+const LAYOUT_SELECTOR = '.archcode-layout,[data-archcode-layout]';
 const STYLE_ID = 'archcode-hugo-viewer-style';
 
 installElkShim();
@@ -58,15 +69,49 @@ export async function renderBlock(block: HTMLElement, index = 0): Promise<void> 
   }
 
   try {
-    const layout = await layoutView(resolveView(result.model, view));
+    // Vị trí kéo thả từ file `.layout.yaml` (data-layout-src hoặc khối .archcode-layout); không có → auto-layout ELK.
+    const saved = await loadLayout(block, issues);
+    const layoutDiagnostics = saved ? checkLayout(saved.layout, result.model) : [];
+    const { nodes, edges } = viewLayout(saved?.layout, view.id);
+    const layout = await layoutView(resolveView(result.model, view), {
+      positions: nodes,
+      waypoints: edges,
+      // Hugo viewer không nhúng libavoid (xem libavoid-stub.ts).
+      avoidNodes: false,
+    });
     output.innerHTML = renderSvg(layout, {
       diagnostics: result.diagnostics,
       idPrefix: `hugo-${index}-`,
       title: view.name,
     });
-    renderMessages(diagnostics, issues, result.diagnostics);
+    renderMessages(diagnostics, issues, [
+      ...result.diagnostics,
+      ...(saved?.diagnostics ?? []),
+      ...layoutDiagnostics,
+    ]);
   } catch (err) {
     showError(output, diagnostics, `Could not render diagram: ${(err as Error).message}`);
+  }
+}
+
+async function loadLayout(
+  block: HTMLElement,
+  issues: string[],
+): Promise<{ layout: LayoutFile; diagnostics: Diagnostic[] } | undefined> {
+  const inline = block.querySelector<HTMLElement>(LAYOUT_SELECTOR);
+  if (inline) {
+    inline.hidden = true;
+    return parseLayout(normalizeSource(inline.textContent ?? ''));
+  }
+  const src = block.dataset.layoutSrc?.trim();
+  if (!src) return undefined;
+  try {
+    const response = await fetch(src);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return parseLayout(await response.text(), src);
+  } catch (err) {
+    issues.push(`Could not load layout "${src}" (${(err as Error).message}); using auto-layout.`);
+    return undefined;
   }
 }
 

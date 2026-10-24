@@ -60,6 +60,21 @@ export const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<G
       data-id={g.id}
     >
       <span className="arch-group-label">{g.label}</span>
+      {/* Handle ẩn: điểm neo cho connector nối vào group. */}
+      <Handle
+        type="target"
+        id="t"
+        position={Position.Top}
+        className="h-anchor"
+        isConnectable={false}
+      />
+      <Handle
+        type="source"
+        id="s"
+        position={Position.Bottom}
+        className="h-anchor"
+        isConnectable={false}
+      />
     </div>
   );
 });

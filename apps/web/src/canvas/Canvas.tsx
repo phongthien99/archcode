@@ -229,25 +229,34 @@ function CanvasInner() {
 
   const nodes = useMemo(() => [...groupNodes, ...components], [groupNodes, components]);
 
+  // Đầu mút connector là component hoặc group (ID hai loại không trùng nhau).
+  const groupIds = useMemo(() => new Set(canvas?.groups.map((g) => g.id)), [canvas]);
+  const endId = useCallback(
+    (id: string) => (groupIds.has(id) ? gid(id) : cid(id)),
+    [groupIds],
+  );
+
   const edges = useMemo<ArchEdgeType[]>(
     () =>
       (canvas?.edges ?? []).map((edge) => ({
         id: `e:${edge.id}`,
         type: 'arch' as const,
-        source: cid(edge.from),
-        target: cid(edge.to),
+        source: endId(edge.from),
+        target: endId(edge.to),
         sourceHandle: 's',
         targetHandle: 't',
         data: { edge },
         selected: selectedEdges.has(`e:${edge.id}`),
       })),
-    [canvas, selectedEdges],
+    [canvas, selectedEdges, endId],
   );
 
   // Đường đi connector: router orthogonal của core, tính lại mỗi khi node di chuyển.
   useEffect(() => {
     if (!canvas) return;
     const boxes = new Map(components.map((n) => [n.data.node.id, boxOf(n)]));
+    for (const [id, { x, y, width, height }] of shownGroups)
+      if (!boxes.has(id)) boxes.set(id, { x, y, width, height });
     setRoutes(
       routeEdges(
         boxes,
@@ -260,7 +269,7 @@ function CanvasInner() {
         })),
       ),
     );
-  }, [canvas, components, waypoints, draft]);
+  }, [canvas, components, shownGroups, waypoints, draft]);
 
   // Căn khung khi lần đầu hiển thị một view. View trống thì giữ nguyên góc nhìn: node kéo vào
   // phải nằm đúng chỗ thả, không bị căn lại.

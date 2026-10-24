@@ -152,8 +152,11 @@ person, system, external, frontend, gateway, service, database, queue, storage, 
 
 ## 6. `relationships`
 
-A relationship is a directed edge between two components. Relationships can only
-connect components, not groups.
+A relationship is a directed edge between two components or groups. When an end
+is a group ID, the connector attaches to the group frame. A group endpoint is only
+drawn when the group appears in the view (it contains at least one visible
+component). Rules (`no-circular`, `no-orphan`, `forbidden`) only consider
+component-to-component relationships.
 
 ```yaml
 relationships:
@@ -168,8 +171,8 @@ relationships:
 
 | Field | Required | Description |
 |---|---:|---|
-| `from` | Yes | Source component ID. |
-| `to` | Yes | Target component ID. |
+| `from` | Yes | Source component or group ID. |
+| `to` | Yes | Target component or group ID. |
 | `id` | No | Stable relationship ID. If omitted, ArchCode generates an internal ID from `from->to`. |
 | `type` | No | Protocol or relationship kind. |
 | `label` | No | Label shown on the connector. |

@@ -48,11 +48,12 @@ export function resolveView(model: ArchitectureModel, view: View): ResolvedView 
       view.include.some((s) => matchesSelector(model, c, s)) &&
       !view.exclude.some((s) => matchesSelector(model, c, s)),
   );
-  const ids = new Set(components.map((c) => c.id));
-  const relationships = model.relationships.filter((r) => ids.has(r.from) && ids.has(r.to));
-
   const groupIds = new Set(components.flatMap((c) => groupChain(model, c.group)));
   const groups = model.groups.filter((g) => groupIds.has(g.id));
+
+  // Đầu mút có thể là group — chỉ giữ khi group đó hiện trong view (có component bên trong).
+  const ids = new Set([...components.map((c) => c.id), ...groupIds]);
+  const relationships = model.relationships.filter((r) => ids.has(r.from) && ids.has(r.to));
 
   return { view, components, relationships, groups };
 }

@@ -105,6 +105,28 @@ describe('layout thủ công (S5-LAYOUT-02)', () => {
     expect(storage.y - data.y).toBe(GROUP_PADDING.top);
   });
 
+  it('connector nối vào group: đầu mút nằm trên khung group', async () => {
+    const m = validate(`version: 1
+system: { id: t, name: T }
+groups: [{ id: g, name: G }, { id: h, name: H }]
+components:
+  - { id: a, type: service, group: g }
+  - { id: b, type: service, group: h }
+relationships: [{ from: g, to: h }, { from: a, to: h }]
+`).model!;
+    const view = resolveView(m, m.views[0]!);
+    expect(view.relationships.map((r) => r.id)).toEqual(['g->h', 'a->h']);
+
+    for (const positions of [undefined, { a: { x: 0, y: 0 }, b: { x: 0, y: 300 } }]) {
+      const layout = await layoutView(view, { positions, avoidNodes: false });
+      const h = layout.groups.find((x) => x.group.id === 'h')!;
+      for (const edge of layout.edges) {
+        const end = edge.points.at(-1)!;
+        expect(end.y, edge.relationship.id).toBeCloseTo(h.y, 0);
+      }
+    }
+  });
+
   it('SVG dùng viewBox theo vùng vẽ', async () => {
     const layout = await layoutView(overview, {
       positions: { 'api-gateway': { x: -100, y: -50 } },

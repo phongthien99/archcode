@@ -159,7 +159,9 @@ export async function layoutView(view: ResolvedView, options: LayoutOptions = {}
     const id = `e:${i}`;
     relById.set(id, rel);
     const label = edgeLabelContent(rel);
-    const edge: ElkExtendedEdge = { id, sources: [cid(rel.from)], targets: [cid(rel.to)] };
+    // Đầu mút là group → nối vào node compound của group.
+    const end = (ref: string) => (groupIds.has(ref) && !contents.has(ref) ? gid(ref) : cid(ref));
+    const edge: ElkExtendedEdge = { id, sources: [end(rel.from)], targets: [end(rel.to)] };
     if (label) {
       labels.set(id, label);
       edge.labels = [

@@ -258,13 +258,23 @@ export function manualLayout({
     label: labels.get(i),
     waypoints: waypoints[r.id],
   }));
-  const routes = route(boxes, requests, {
+  // Connector nối vào group: khung group là một đầu mút như node (ID group và component không trùng).
+  const endpoints = new Set(view.relationships.flatMap((r) => [r.from, r.to]));
+  const routeBoxes = new Map(boxes);
+  const nodeGroup = new Map(components.map((c) => [c.id, c.group]));
+  for (const g of groups) {
+    if (!endpoints.has(g.group.id) || boxes.has(g.group.id)) continue;
+    routeBoxes.set(g.group.id, { x: g.x, y: g.y, width: g.width, height: g.height });
+    // Connector được đi vào chính group đầu mút (libavoid không coi nó là vật cản).
+    nodeGroup.set(g.group.id, g.group.id);
+  }
+  const routes = route(routeBoxes, requests, {
     groups: groups.map((g) => ({
       id: g.group.id,
       parent: g.group.parent,
       box: { x: g.x, y: g.y, width: g.width, height: g.height },
     })),
-    nodeGroup: new Map(components.map((c) => [c.id, c.group])),
+    nodeGroup,
   });
   const edges = view.relationships.flatMap((relationship, i) => {
     const route = routes.get(String(i));

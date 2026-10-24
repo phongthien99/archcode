@@ -21,15 +21,15 @@ describe('tham chiếu', () => {
     expect(diagnostics.find((d) => d.line === 16)).toMatchObject({ column: 9 });
   });
 
-  it('quan hệ nối vào group là lỗi invalid-reference', () => {
+  it('quan hệ được nối vào group', () => {
     expect(
       codes(
-        yaml(`groups: [{ id: g, name: G }]
-components: [{ id: a, type: service, group: g }]
-relationships: [{ from: a, to: g }]
+        yaml(`groups: [{ id: g, name: G }, { id: h, name: H }]
+components: [{ id: a, type: service, group: g }, { id: b, type: service, group: h }]
+relationships: [{ from: a, to: h }, { from: g, to: h }]
 `),
       ),
-    ).toContain('invalid-reference');
+    ).toEqual([]);
   });
 });
 

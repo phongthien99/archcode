@@ -125,19 +125,11 @@ export function semanticValidate(model: ArchitectureModel, ctx: Context): Diagno
   for (const rel of model.relationships) {
     for (const end of ['from', 'to'] as const) {
       const target = rel[end];
-      if (componentIds.has(target)) continue;
-      if (groupIds.has(target)) {
-        diagnostics.push({
-          severity: 'error',
-          code: 'invalid-reference',
-          message: `"${target}" là group; quan hệ chỉ được nối giữa các component`,
-          ...at(rel, end),
-        });
-      } else {
-        diagnostics.push(
-          unknownRef(`Component "${target}" không tồn tại`, target, componentIds, at(rel, end)),
-        );
-      }
+      // Đầu mút là component hoặc group (connector nối vào khung group).
+      if (componentIds.has(target) || groupIds.has(target)) continue;
+      diagnostics.push(
+        unknownRef(`Component "${target}" không tồn tại`, target, componentIds, at(rel, end)),
+      );
     }
     if (rel.from === rel.to) {
       diagnostics.push({

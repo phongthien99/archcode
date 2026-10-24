@@ -113,8 +113,8 @@
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/definitions/id" },
-        "from": { "type": "string" },
-        "to": { "type": "string" },
+        "from": { "type": "string", "description": "ID component hoặc group nguồn." },
+        "to": { "type": "string", "description": "ID component hoặc group đích." },
         "type": {
           "type": "string",
           "description": "Giao thức hoặc kiểu quan hệ: http, grpc, sql, amqp, event..."
